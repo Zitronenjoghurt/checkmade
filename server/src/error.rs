@@ -16,6 +16,26 @@ pub enum ServerError {
     Reqwest(#[from] oauth2::reqwest::Error),
     #[error("OAuth2 token request error: {0}")]
     TokenRequest(String),
+    #[error("Unauthorized")]
+    Unauthorized,
     #[error("Error parsing URL: {0}")]
     Url(#[from] oauth2::url::ParseError),
+}
+
+impl ServerError {
+    pub fn message(&self) -> String {
+        match self {
+            Self::Core(e) => e.to_string(),
+            Self::Unauthorized => "Unauthorized".to_string(),
+            _ => "An unexpected error occurred".to_string(),
+        }
+    }
+
+    pub fn is_user_error(&self) -> bool {
+        match self {
+            Self::Core(e) => e.is_user_error(),
+            Self::Unauthorized => true,
+            _ => false,
+        }
+    }
 }

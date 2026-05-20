@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-checkmade-core = { workspace = true }
+checkmade-core = { workspace = true, features = ["bitcode"] }
 anyhow = { workspace = true }
 eframe = { version = "0.34.2", default-features = false, features = ["persistence"] }
 egui = "0.34.2"
@@ -12,9 +12,12 @@ egui_dock = { version = "0.19.1", features = ["serde"] }
 egui_extras = "0.34.2"
 egui-notify = "0.22.0"
 egui-phosphor = { version = "0.12.0", features = ["regular"] }
+ehttp = "0.7.1"
+ewebsock = "0.8.0"
 log = "0.4.29"
 serde = { workspace = true }
 strum = { workspace = true }
+web-time = "1.1.0"
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 eframe = { version = "0.34.2", default-features = false, features = ["persistence", "wayland", "wgpu", "x11"] }
@@ -26,4 +29,4 @@ eframe = { version = "0.34.2", default-features = false, features = ["glow", "pe
 js-sys = "0.3.98"
 wasm-bindgen = "0.2.121"
 wasm-bindgen-futures = "0.4.71"
-web-sys = "0.3.70"
+web-sys = { version = "0.3.98", features = ["Window", "Location"] }

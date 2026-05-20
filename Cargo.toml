@@ -4,7 +4,7 @@ members = ["app", "core", "server"]
 
 [workspace.dependencies]
 checkmade-core = { path = "core" }
-giga-chess = { path = "../giga-chess" }
+giga-chess = { git = "https://github.com/Zitronenjoghurt/giga-chess", branch = "main" }
 anyhow = "1.0.102"
 bitcode = "0.6.9"
 serde = { version = "1.0.228", features = ["derive"] }

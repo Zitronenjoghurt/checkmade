@@ -15,6 +15,7 @@ mod error;
 mod integrations;
 mod layers;
 mod state;
+mod websocket;
 
 #[tokio::main]
 async fn main() {
@@ -41,7 +42,7 @@ async fn main() {
     });
 
     let router = Router::new()
-        //.route("/ws", get(websocket::ws_handler))
+        .route("/ws", get(websocket::handler::ws_handler))
         .nest("/api", api)
         .fallback_service(ServeDir::new(static_dir))
         .layer(session_layer)
