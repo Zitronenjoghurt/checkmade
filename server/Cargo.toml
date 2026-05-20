@@ -1,0 +1,25 @@
+[package]
+name = "checkmade-server"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+checkmade-core = { workspace = true, features = ["bitcode", "data"] }
+axum = { version = "0.8.9", features = ["ws"] }
+dashmap = "6.1.0"
+futures-util = "0.3.32"
+metrics = "0.24.5"
+metrics-exporter-prometheus = "0.18.3"
+metrics-process = { version = "2.4.3", features = ["use-gauge-on-cpu-seconds-total"] }
+oauth2 = "5.0.0"
+petname = "3.0.0"
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+tokio = { version = "1.52.3", features = ["macros", "rt-multi-thread", "signal"] }
+tower-http = { version = "0.6.11", features = ["fs"] }
+tower-sessions = { version = "0.14.0", features = ["signed"] }
+tower-sessions-sqlx-store = { version = "0.15.0", features = ["postgres"] }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+uuid = { workspace = true, features = ["v4"] }

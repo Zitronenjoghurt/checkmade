@@ -1,0 +1,21 @@
+[package]
+name = "checkmade-core"
+version = "0.1.0"
+edition = "2024"
+
+[features]
+data = ["async-trait", "futures", "migration", "sea-orm", "serde"]
+
+[dependencies]
+giga-chess = { workspace = true }
+migration = { path = "migration", optional = true }
+async-trait = { version = "0.1.89", optional = true }
+bitcode = { workspace = true, optional = true }
+bitflags = "2.11.1"
+futures = { version = "0.3.32", optional = true }
+sea-orm = { version = "2.0.0-rc.38", features = ["sqlx-postgres", "runtime-tokio-rustls", "macros"], optional = true }
+serde = { workspace = true, optional = true }
+strum = { workspace = true }
+thiserror = { workspace = true }
+tracing = { workspace = true }
+uuid = { workspace = true }
