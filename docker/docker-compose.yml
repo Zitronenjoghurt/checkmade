@@ -1,6 +1,6 @@
 services:
-  checkmade-server:
-    container_name: checkmade-server
+  server:
+    container_name: checkmade
     build:
       context: ..
       dockerfile: docker/Dockerfile
@@ -9,6 +9,31 @@ services:
       - .env
     ports:
       - "51292:51292"
+
+  server-dev:
+    container_name: checkmade
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.dev
+    env_file:
+      - .env
+    ports:
+      - "127.0.0.1:51292:51292"
+    volumes:
+      - ..:/checkmade
+      - checkmade_cargo_target:/checkmade/target
+      - checkmade_cargo_registry:/usr/local/cargo/registry
+    depends_on:
+      db:
+        condition: service_healthy
+    init: true
+    command: >-
+      cargo watch -w core -w server -w app --delay 3
+      -s "cd /checkmade/app && trunk build --filehash false
+      && cd /checkmade && cargo run --bin checkmade-server"
+    environment:
+      - STATIC_DIR=/checkmade/app/dist
+    profiles: [ dev ]
 
   db:
     container_name: checkmade-db
@@ -28,7 +53,46 @@ services:
     networks:
       - default
 
+  postgres-exporter:
+    container_name: checkmade-postgres-exporter
+    image: prometheuscommunity/postgres-exporter:latest
+    restart: unless-stopped
+    environment:
+      - DATA_SOURCE_NAME=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}?sslmode=disable
+    env_file:
+      - .env
+    networks:
+      - default
+
+  prometheus:
+    container_name: checkmade-prometheus
+    image: prom/prometheus:latest
+    restart: unless-stopped
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - checkmade_prometheus_data:/prometheus
+    networks:
+      - default
+
+  grafana:
+    container_name: checkmade-grafana
+    image: grafana/grafana:latest
+    env_file:
+      - .env
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:3000:3000"
+    volumes:
+      - checkmade_grafana_data:/var/lib/grafana
+      - ./grafana/datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml:ro
+      - ./grafana/dashboards.yml:/etc/grafana/provisioning/dashboards/dashboards.yml:ro
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
+    networks:
+      - default
+
 volumes:
   checkmade_db_data:
   checkmade_prometheus_data:
   checkmade_grafana_data:
+  checkmade_cargo_target:
+  checkmade_cargo_registry:
