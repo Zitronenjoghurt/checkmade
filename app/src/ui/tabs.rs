@@ -1,3 +1,5 @@
+use crate::i18n::Translatable;
+use checkmade_core::lingo::Lingo::Settings;
 use egui::{Ui, WidgetText};
 use strum::EnumIter;
 
@@ -39,9 +41,9 @@ pub enum Tab {
 }
 
 impl Tab {
-    pub fn title(&self) -> &'static str {
+    pub fn title(&self) -> String {
         match self {
-            Tab::Settings => "Settings",
+            Tab::Settings => Settings.t().to_string(),
         }
     }
 }

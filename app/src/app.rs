@@ -4,6 +4,7 @@ use crate::store::Store;
 use crate::ui::icons;
 use crate::ui::state::UiState;
 use crate::ui::tabs::{Tab, TabViewer};
+use crate::ui::widgets::generic_select::GenericSelect;
 use crate::ui::widgets::profile_menu::ProfileMenu;
 use crate::ws::Ws;
 use checkmade_core::messages::server::ServerMessage;
@@ -148,6 +149,10 @@ impl Checkmade {
 
                 ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
                     ProfileMenu::new(&self.store, &mut self.http).ui(ui);
+                    self.ui.settings.dirty |=
+                        GenericSelect::from_enum(&mut self.ui.settings.locale, "locale_select")
+                            .ui(ui)
+                            .changed();
                 });
             });
         });

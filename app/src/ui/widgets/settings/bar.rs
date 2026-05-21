@@ -1,4 +1,6 @@
+use crate::i18n::Translatable;
 use crate::ui::state::settings::{Settings, SettingsTab};
+use checkmade_core::lingo::Lingo::Categories;
 use egui::{Response, ScrollArea, Ui, Widget};
 use strum::IntoEnumIterator;
 
@@ -25,7 +27,7 @@ impl Widget for SettingsBar<'_> {
     fn ui(self, ui: &mut Ui) -> Response {
         ui.vertical(|ui| {
             ui.vertical_centered(|ui| {
-                ui.heading("Categories");
+                ui.heading(Categories.t());
             });
             ui.separator();
             ScrollArea::vertical().show(ui, |ui| {

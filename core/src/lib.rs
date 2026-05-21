@@ -1,6 +1,7 @@
 #[cfg(feature = "data")]
 pub mod data;
 pub mod error;
+pub mod lingo;
 pub mod messages;
 pub mod types;
 

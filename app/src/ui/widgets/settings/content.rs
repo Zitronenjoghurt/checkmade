@@ -1,5 +1,7 @@
+use crate::i18n::Translatable;
 use crate::ui::state::settings::{Settings, SettingsTab};
 use crate::ui::widgets::reset_slider::ResetSlider;
+use checkmade_core::lingo::Lingo::*;
 use egui::{Grid, Response, ScrollArea, Ui, Widget};
 
 pub struct SettingsContent<'a> {
@@ -27,7 +29,7 @@ impl Widget for SettingsContent<'_> {
 
 impl SettingsContent<'_> {
     pub fn general(mut self, ui: &mut Ui) {
-        ui.heading("General");
+        ui.heading(General.t());
         ui.separator();
 
         let s = &mut self.settings;
@@ -35,7 +37,7 @@ impl SettingsContent<'_> {
         Grid::new("settings_general_grid")
             .num_columns(2)
             .show(ui, |ui| {
-                ui.label("UI Scale");
+                ui.label(UiScale.t());
                 let response = ResetSlider::new(&mut s.ui_scale, 0.5..=5.0)
                     .step_by(0.1)
                     .default_value(Settings::DEFAULT_UI_SCALE)

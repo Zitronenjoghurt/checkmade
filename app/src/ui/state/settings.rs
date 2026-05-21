@@ -1,10 +1,13 @@
+use crate::i18n::{Locale, Translatable};
 use crate::ui::icons;
+use checkmade_core::lingo::Lingo::*;
 use strum::EnumIter;
 
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
 pub struct Settings {
     pub ui_scale: f32,
     pub current_tab: SettingsTab,
+    pub locale: Locale,
     #[serde(skip, default = "default_true")]
     pub dirty: bool,
 }
@@ -14,6 +17,7 @@ impl Default for Settings {
         Self {
             ui_scale: Self::DEFAULT_UI_SCALE,
             current_tab: SettingsTab::default(),
+            locale: Locale::default(),
             dirty: true,
         }
     }
@@ -32,6 +36,7 @@ impl Settings {
         }
 
         ctx.set_pixels_per_point(self.ui_scale);
+        self.locale.apply();
 
         self.dirty = false;
     }
@@ -46,9 +51,9 @@ pub enum SettingsTab {
 }
 
 impl SettingsTab {
-    pub fn title(&self) -> &'static str {
+    pub fn title(&self) -> String {
         match self {
-            SettingsTab::General => "General",
+            SettingsTab::General => General.t().to_string(),
         }
     }
 
