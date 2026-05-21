@@ -1,8 +1,10 @@
 use crate::client_time_ms;
 use checkmade_core::messages::client::ClientMessage;
 use checkmade_core::messages::server::ServerMessage;
+use checkmade_core::types::user_id::UserId;
 use ewebsock::{WsEvent, WsMessage, WsReceiver, WsSender};
 
+pub mod cache;
 pub mod fetchable;
 
 #[derive(Default)]
@@ -107,7 +109,23 @@ impl Ws {
         });
     }
 
-    pub fn request_user_info(&mut self) {
-        self.send(ClientMessage::UserInfo);
+    pub fn request_friends(&mut self) {
+        self.send(ClientMessage::Friends);
+    }
+
+    pub fn request_incoming_friend_requests(&mut self) {
+        self.send(ClientMessage::IncomingFriendRequests);
+    }
+
+    pub fn request_outgoing_friend_requests(&mut self) {
+        self.send(ClientMessage::OutgoingFriendRequests);
+    }
+
+    pub fn request_private_user_info(&mut self) {
+        self.send(ClientMessage::PrivateUserInfo);
+    }
+
+    pub fn request_public_user_info(&mut self, id: UserId) {
+        self.send(ClientMessage::PublicUserInfo(id))
     }
 }

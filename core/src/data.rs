@@ -6,6 +6,7 @@ use sea_orm::{ConnectOptions, DatabaseConnection, DatabaseTransaction, Transacti
 use tracing::info;
 
 pub mod entity;
+mod ext;
 pub mod service;
 pub mod store;
 
@@ -13,6 +14,7 @@ pub use sea_orm::{IntoActiveModel, Set};
 
 pub struct Data {
     connection: DatabaseConnection,
+    pub friends: store::friendship::FriendshipStore,
     pub user: store::user::UserStore,
 }
 
@@ -25,6 +27,7 @@ impl Data {
         info!("Connected to database!");
 
         let data = Self {
+            friends: store::friendship::FriendshipStore::new(&connection),
             user: store::user::UserStore::new(&connection),
             connection,
         };

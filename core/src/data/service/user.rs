@@ -20,12 +20,14 @@ impl UserService {
 
     pub fn public_info(&self, user: &user::Model) -> PublicUserInfo {
         PublicUserInfo {
+            id: user.id.into(),
             username: user.username.clone(),
         }
     }
 
     pub fn private_info(&self, user: &user::Model) -> PrivateUserInfo {
         PrivateUserInfo {
+            friend_code: user.friend_code.clone(),
             public: self.public_info(user),
             permissions: user.permissions,
         }

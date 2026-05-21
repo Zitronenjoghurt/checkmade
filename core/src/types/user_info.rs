@@ -1,9 +1,11 @@
 use crate::types::permissions::Permissions;
+use crate::types::user_id::UserId;
 
 #[derive(Clone)]
 #[cfg_attr(feature = "bitcode", derive(bitcode::Encode, bitcode::Decode))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct PublicUserInfo {
+    pub id: UserId,
     pub username: String,
 }
 
@@ -11,6 +13,7 @@ pub struct PublicUserInfo {
 #[cfg_attr(feature = "bitcode", derive(bitcode::Encode, bitcode::Decode))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct PrivateUserInfo {
+    pub friend_code: String,
     pub public: PublicUserInfo,
     pub permissions: i64,
 }

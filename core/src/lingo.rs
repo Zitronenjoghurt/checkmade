@@ -4,6 +4,10 @@ use strum::EnumIter;
 pub enum Lingo {
     Categories,
     FetchingUserInfo,
+    FriendRequestDeclined,
+    FriendRequestReceived,
+    FriendRequestSent,
+    FriendRemoved,
     General,
     Latency,
     Logout,

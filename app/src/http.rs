@@ -1,9 +1,9 @@
-mod request;
-
 use crate::http::request::RequestState;
 use crate::reload;
 use ehttp::Request;
 use std::sync::mpsc::channel;
+
+mod request;
 
 #[derive(Default)]
 pub struct Http {

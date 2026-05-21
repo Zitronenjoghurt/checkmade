@@ -5,7 +5,6 @@ use axum::response::Redirect;
 use axum::routing::get;
 use axum::Router;
 use oauth2::{AuthorizationCode, PkceCodeChallenge, PkceCodeVerifier, TokenResponse};
-use petname::petname;
 use tower_sessions::Session;
 
 #[derive(serde::Deserialize)]
@@ -67,11 +66,10 @@ async fn get_callback(
     let user = if let Some(user) = state.data.user.find_by_discord_id(&discord_user.id).await? {
         user
     } else {
-        let name = petname(3, "-").unwrap();
         state
             .data
             .user
-            .create_from_discord(&discord_user.id, name)
+            .create_from_discord(&discord_user.id)
             .await?
     };
 

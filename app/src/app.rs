@@ -1,4 +1,5 @@
 use crate::http::Http;
+use crate::i18n::Translatable;
 use crate::server_time::ServerTime;
 use crate::store::Store;
 use crate::ui::icons;
@@ -7,6 +8,7 @@ use crate::ui::tabs::{Tab, TabViewer};
 use crate::ui::widgets::generic_select::GenericSelect;
 use crate::ui::widgets::profile_menu::ProfileMenu;
 use crate::ws::Ws;
+use checkmade_core::lingo::Lingo::*;
 use checkmade_core::messages::server::ServerMessage;
 use egui::{CentralPanel, Panel, Widget};
 use egui_dock::DockState;
@@ -100,16 +102,58 @@ impl Checkmade {
 impl Checkmade {
     pub fn handle_message(&mut self, msg: ServerMessage) {
         match msg {
+            ServerMessage::Error(err) => {
+                self.toasts.error(err);
+            }
+            ServerMessage::FriendRequestIncoming(info) => {
+                self.store
+                    .incoming_friend_requests
+                    .insert(info.user_id, info.since);
+                self.toasts.info(FriendRequestReceived.t());
+            }
+            ServerMessage::FriendRequestDeclinedByPeer(id) => {
+                self.store.outgoing_friend_requests.remove(&id);
+            }
+            ServerMessage::FriendshipEstablished(info) => {
+                self.store.friends.insert(info.user_id, info.since);
+            }
+            ServerMessage::FriendshipRemovedByPeer(id) => {
+                self.store.friends.remove(&id);
+            }
+            ServerMessage::FriendRequestSendOk(info) => {
+                self.store
+                    .outgoing_friend_requests
+                    .insert(info.user_id, info.since);
+                self.toasts.success(FriendRequestSent.t());
+            }
+            ServerMessage::FriendRequestDeclineOk(id) => {
+                self.store.incoming_friend_requests.remove(&id);
+                self.toasts.success(FriendRequestDeclined.t());
+            }
+            ServerMessage::FriendRemoveOk(id) => {
+                self.store.friends.remove(&id);
+                self.toasts.success(FriendRemoved.t());
+            }
+            ServerMessage::Friends(friends) => {
+                let map = friends.into_iter().map(|f| (f.user_id, f.since)).collect();
+                self.store.friends.set_value(map);
+            }
+            ServerMessage::IncomingFriendRequests(requests) => {
+                let map = requests.into_iter().map(|r| (r.user_id, r.since)).collect();
+                self.store.incoming_friend_requests.set_value(map);
+            }
+            ServerMessage::OutgoingFriendRequests(requests) => {
+                let map = requests.into_iter().map(|r| (r.user_id, r.since)).collect();
+                self.store.outgoing_friend_requests.set_value(map);
+            }
             ServerMessage::Pong {
                 client_time,
                 server_time,
             } => {
                 self.server_time.handle_pong(client_time, server_time);
             }
-            ServerMessage::Error(err) => {
-                self.toasts.error(err);
-            }
-            ServerMessage::UserInfo(info) => self.store.user_info.set_value(info),
+            ServerMessage::PrivateUserInfo(info) => self.store.me.set_value(info),
+            ServerMessage::PublicUserInfo(info) => self.store.users.set(info.id, info),
         }
     }
 }

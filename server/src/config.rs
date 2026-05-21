@@ -13,6 +13,8 @@ pub struct Config {
     pub max_ws_outbound_buffer_size_kb: usize,
     pub ws_rate_limit_max_tokens: f64,
     pub ws_rate_limit_refill_rate: f64,
+    pub friend_limit: usize,
+    pub friend_request_limit: usize,
 }
 
 impl Config {
@@ -39,6 +41,12 @@ impl Config {
             ws_rate_limit_refill_rate: std::env::var("WS_RATE_LIMIT_REFILL_RATE")
                 .unwrap_or("20".to_string())
                 .parse::<f64>()?,
+            friend_limit: std::env::var("FRIEND_LIMIT")
+                .unwrap_or("500".to_string())
+                .parse::<usize>()?,
+            friend_request_limit: std::env::var("FRIEND_REQUEST_LIMIT")
+                .unwrap_or("500".to_string())
+                .parse::<usize>()?,
         })
     }
 }

@@ -14,6 +14,7 @@ impl MigrationTrait for Migration {
                     .col(pk_uuid(User::Id).default(Expr::cust("gen_random_uuid()")))
                     .col(string_null(User::DiscordId).unique_key())
                     .col(string(User::Username).unique_key())
+                    .col(string(User::FriendCode).unique_key())
                     .col(big_integer(User::Permissions).default(Expr::val(0)))
                     .col(small_integer(User::RateLimitInfractions).default(Expr::val(0)))
                     .col(timestamp(User::LastLogin).default(Expr::current_timestamp()))
@@ -67,6 +68,7 @@ enum User {
     Id,
     DiscordId,
     Username,
+    FriendCode,
     Permissions,
     RateLimitInfractions,
     LastLogin,

@@ -18,7 +18,7 @@ impl<'a> ProfileMenu<'a> {
 
 impl Widget for ProfileMenu<'_> {
     fn ui(self, ui: &mut Ui) -> Response {
-        ui.horizontal(|ui| match &self.store.user_info.value {
+        ui.horizontal(|ui| match &self.store.me.value {
             Some(info) => {
                 let label = format!("{} {}", icons::USER, info.public.username);
                 ui.menu_button(label, |ui| {
