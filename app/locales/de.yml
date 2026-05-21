@@ -1,8 +1,22 @@
+add_friend: Freund hinzufügen
 categories: Kategorien
 fetching_user_info: Lade Benutzerinfos
+friend_request_declined: Freundschaftsanfrage abgelehnt
+friend_request_received: Freundschaftsanfrage empfangen
+friend_request_sent: Freundschaftsanfrage gesendet
+friend_removed: Freund entfernt
+friends: Freunde
+friend_added: Freund hinzugefügt
+friend_code: Freundschaftscode
 general: Allgemein
 latency: Latenz
+list: Liste
 logout: Ausloggen
+no_friends: Keine Freunde
+no_friend_requests: Keine Freundschaftsanfragen
+pending: Ausstehend
+requests: Anfragen
 server_time: Serverzeit
 settings: Einstellungen
 ui_scale: UI Skalierung
+x_ago: 'vor %{x}'

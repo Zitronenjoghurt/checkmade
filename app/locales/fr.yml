@@ -1,8 +1,22 @@
+add_friend: x
 categories: x
 fetching_user_info: x
+friend_request_declined: x
+friend_request_received: x
+friend_request_sent: x
+friend_removed: x
+friends: x
+friend_added: x
+friend_code: x
 general: x
 latency: x
+list: x
 logout: x
+no_friends: x
+no_friend_requests: x
+pending: x
+requests: x
 server_time: x
 settings: x
 ui_scale: x
+x_ago: '%{x} x'

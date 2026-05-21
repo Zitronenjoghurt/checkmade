@@ -1,7 +1,7 @@
 use crate::data::entity::user;
-use crate::data::service::friendship::generate_friend_code;
 use crate::data::store::Store;
 use crate::error::CoreResult;
+use crate::types::friend_code::generate_friend_code;
 use petname::petname;
 use sea_orm::DatabaseConnection;
 use sea_orm::{ColumnTrait, Set};

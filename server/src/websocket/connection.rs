@@ -232,7 +232,7 @@ impl WebsocketConnection {
             .service
             .friends
             .paginate_friends(self.user_id, self.state.config.friend_limit as u64)
-            .fetch_page(1)
+            .fetch_page(0)
             .await?
             .into_iter()
             .map(|fs| {
@@ -258,7 +258,7 @@ impl WebsocketConnection {
             .service
             .friends
             .paginate_received_requests(self.user_id, self.state.config.friend_limit as u64)
-            .fetch_page(1)
+            .fetch_page(0)
             .await?
             .into_iter()
             .map(|fs| {
@@ -283,7 +283,7 @@ impl WebsocketConnection {
             .service
             .friends
             .paginate_sent_requests(self.user_id, self.state.config.friend_limit as u64)
-            .fetch_page(1)
+            .fetch_page(0)
             .await?
             .into_iter()
             .map(|fs| {

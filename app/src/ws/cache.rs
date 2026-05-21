@@ -43,17 +43,10 @@ impl<K: Eq + Hash + Copy, V> FetchableCache<K, V> {
     }
 
     pub fn get(&mut self, key: K) -> Option<&V> {
-        self.entries
-            .entry(key)
-            .or_insert_with(Fetchable::new)
-            .value
-            .as_ref()
+        self.entries.entry(key).or_default().value.as_ref()
     }
 
     pub fn set(&mut self, key: K, value: V) {
-        self.entries
-            .entry(key)
-            .or_insert_with(Fetchable::new)
-            .set_value(value);
+        self.entries.entry(key).or_default().set_value(value);
     }
 }

@@ -1,3 +1,4 @@
+pub mod friend_code;
 pub mod friend_info;
 pub mod friendship_status;
 pub mod permissions;

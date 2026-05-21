@@ -34,4 +34,12 @@ impl Store {
             .request_if_needed(|| ws.request_outgoing_friend_requests());
         self.users.update(|id| ws.request_public_user_info(id));
     }
+
+    pub fn friend_request_count(&self) -> usize {
+        self.incoming_friend_requests
+            .value
+            .as_ref()
+            .map(|v| v.len())
+            .unwrap_or(0)
+    }
 }

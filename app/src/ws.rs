@@ -128,4 +128,16 @@ impl Ws {
     pub fn request_public_user_info(&mut self, id: UserId) {
         self.send(ClientMessage::PublicUserInfo(id))
     }
+
+    pub fn accept_friend_request(&mut self, id: UserId) {
+        self.send(ClientMessage::AcceptFriendRequest(id));
+    }
+
+    pub fn decline_friend_request(&mut self, id: UserId) {
+        self.send(ClientMessage::DeclineFriendRequest(id));
+    }
+
+    pub fn send_friend_request(&mut self, friend_code: String) {
+        self.send(ClientMessage::SendFriendRequest { friend_code });
+    }
 }

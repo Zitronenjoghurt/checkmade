@@ -7,6 +7,7 @@ use crate::ui::state::UiState;
 use crate::ui::tabs::{Tab, TabViewer};
 use crate::ui::widgets::generic_select::GenericSelect;
 use crate::ui::widgets::profile_menu::ProfileMenu;
+use crate::ui::widgets::with_badge::WithBadge;
 use crate::ws::Ws;
 use checkmade_core::lingo::Lingo::*;
 use checkmade_core::messages::server::ServerMessage;
@@ -73,10 +74,11 @@ impl eframe::App for Checkmade {
             self.server_time.update(&mut self.ws);
             self.store.update(&mut self.ws);
         }
+        self.toasts.show(ui.ctx());
         self.render(ui);
         ui.ctx().request_repaint();
 
-        if self.server_time.is_timed_out() {
+        if self.server_time.is_timed_out() && self.ws.is_connected() {
             self.ws.disconnect();
             self.toasts.error("Connection timed out.");
         }
@@ -115,7 +117,10 @@ impl Checkmade {
                 self.store.outgoing_friend_requests.remove(&id);
             }
             ServerMessage::FriendshipEstablished(info) => {
+                self.store.incoming_friend_requests.remove(&info.user_id);
+                self.store.outgoing_friend_requests.remove(&info.user_id);
                 self.store.friends.insert(info.user_id, info.since);
+                self.toasts.success(FriendAdded.t());
             }
             ServerMessage::FriendshipRemovedByPeer(id) => {
                 self.store.friends.remove(&id);
@@ -187,8 +192,22 @@ impl Checkmade {
                 ui.label("Checkmade");
                 ui.separator();
 
-                if ui.button(icons::GEAR_SIX).clicked() {
+                if ui
+                    .button(icons::GEAR_SIX)
+                    .on_hover_text(Settings.t())
+                    .clicked()
+                {
                     self.open_tab(Tab::Settings);
+                }
+
+                let resp = ui
+                    .add(
+                        WithBadge::new(egui::Button::new(icons::USERS_THREE))
+                            .dot(self.store.friend_request_count() > 0),
+                    )
+                    .on_hover_text(Friends.t());
+                if resp.clicked() {
+                    self.open_tab(Tab::Friends);
                 }
 
                 ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {

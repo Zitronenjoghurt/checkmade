@@ -8,15 +8,6 @@ use sea_orm::{IntoActiveModel, Set};
 use std::sync::Arc;
 use uuid::Uuid;
 
-const FRIEND_CODE_ALPHABET: &[char] = &[
-    '2', '3', '4', '6', '7', '8', '9', 'B', 'D', 'F', 'G', 'H', 'K', 'M', 'P', 'R', 'T', 'X',
-];
-const FRIEND_CODE_LENGTH: usize = 9;
-
-pub fn generate_friend_code() -> String {
-    nanoid::nanoid!(FRIEND_CODE_LENGTH, FRIEND_CODE_ALPHABET)
-}
-
 pub struct FriendshipService {
     data: Arc<Data>,
 }

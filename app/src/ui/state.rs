@@ -1,7 +1,10 @@
+use crate::ui::widgets::friends::FriendsTab;
+
 pub mod settings;
 
 #[derive(Default, serde::Serialize, serde::Deserialize)]
 pub struct UiState {
+    pub friends_tab: FriendsTab,
     pub settings: settings::Settings,
 }
 

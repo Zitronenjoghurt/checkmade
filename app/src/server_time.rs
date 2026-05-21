@@ -1,5 +1,6 @@
 use crate::client_time_ms;
 use crate::ws::Ws;
+use chrono::{DateTime, TimeZone, Utc};
 use std::collections::VecDeque;
 use web_time::Duration;
 
@@ -101,8 +102,18 @@ impl ServerTime {
         (server_time as i64 - self.offset).max(0) as u64
     }
 
+    pub fn to_local_datetime(&self, server_time: u64) -> DateTime<Utc> {
+        Utc.timestamp_millis_opt(self.to_local(server_time) as i64)
+            .unwrap()
+    }
+
     pub fn now(&self) -> u64 {
         (client_time_ms() as i64 + self.offset).max(0) as u64
+    }
+
+    pub fn server_datetime(&self) -> DateTime<Utc> {
+        let ms = self.now();
+        Utc.timestamp_millis_opt(ms as i64).unwrap()
     }
 
     pub fn elapsed_since(&self, server_time: u64) -> Duration {

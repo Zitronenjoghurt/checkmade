@@ -10,6 +10,7 @@ targets = ["wasm32-unknown-unknown"]
 [dependencies]
 checkmade-core = { workspace = true, features = ["bitcode"] }
 anyhow = { workspace = true }
+chrono = "0.4.44"
 eframe = { version = "0.34.2", default-features = false, features = ["persistence"] }
 egui = "0.34.2"
 egui_dock = { version = "0.19.1", features = ["serde"] }

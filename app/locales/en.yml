@@ -1,8 +1,22 @@
+add_friend: Add Friend
 categories: Categories
 fetching_user_info: Fetching user info
+friend_request_declined: Friend request declined
+friend_request_received: Friend request received
+friend_request_sent: Friend request sent
+friend_removed: Friend removed
+friends: Friends
+friend_added: Friend added
+friend_code: Friend Code
 general: General
 latency: Latency
+list: List
 logout: Logout
+no_friends: No friends
+no_friend_requests: No friend requests
+pending: Pending
+requests: Requests
 server_time: Server Time
 settings: Settings
 ui_scale: UI Scale
+x_ago: '%{x} ago'
