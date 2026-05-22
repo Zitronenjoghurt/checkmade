@@ -2,3 +2,4 @@
 
 pub use super::friendship::Entity as Friendship;
 pub use super::user::Entity as User;
+pub use super::user_identity::Entity as UserIdentity;

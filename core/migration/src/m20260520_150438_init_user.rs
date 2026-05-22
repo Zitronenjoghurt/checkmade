@@ -12,7 +12,6 @@ impl MigrationTrait for Migration {
                     .table(User::Table)
                     .if_not_exists()
                     .col(pk_uuid(User::Id).default(Expr::cust("gen_random_uuid()")))
-                    .col(string_null(User::DiscordId).unique_key())
                     .col(string(User::Username).unique_key())
                     .col(string(User::FriendCode).unique_key())
                     .col(big_integer(User::Permissions).default(Expr::val(0)))
@@ -42,10 +41,60 @@ impl MigrationTrait for Migration {
             )
             .await?;
 
+        manager
+            .create_table(
+                Table::create()
+                    .table(UserIdentity::Table)
+                    .if_not_exists()
+                    .col(uuid(UserIdentity::UserId))
+                    .col(small_integer(UserIdentity::Provider))
+                    .col(string(UserIdentity::Identifier))
+                    .col(timestamp(UserIdentity::CreatedAt).default(Expr::current_timestamp()))
+                    .primary_key(
+                        Index::create()
+                            .col(UserIdentity::UserId)
+                            .col(UserIdentity::Provider)
+                            .col(UserIdentity::Identifier),
+                    )
+                    .foreign_key(
+                        ForeignKey::create()
+                            .from(UserIdentity::Table, UserIdentity::UserId)
+                            .to(User::Table, User::Id)
+                            .on_delete(ForeignKeyAction::Cascade),
+                    )
+                    .to_owned(),
+            )
+            .await?;
+
+        manager
+            .create_index(
+                Index::create()
+                    .name("idx_user_identity_provider_identifier")
+                    .table(UserIdentity::Table)
+                    .col(UserIdentity::Provider)
+                    .col(UserIdentity::Identifier)
+                    .unique()
+                    .to_owned(),
+            )
+            .await?;
+
         Ok(())
     }
 
     async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
+        manager
+            .drop_index(
+                Index::drop()
+                    .name("idx_user_identity_provider_identifier")
+                    .table(UserIdentity::Table)
+                    .to_owned(),
+            )
+            .await?;
+
+        manager
+            .drop_table(Table::drop().table(UserIdentity::Table).to_owned())
+            .await?;
+
         manager
             .get_connection()
             .execute_unprepared(
@@ -66,7 +115,6 @@ impl MigrationTrait for Migration {
 enum User {
     Table,
     Id,
-    DiscordId,
     Username,
     FriendCode,
     Permissions,
@@ -74,4 +122,13 @@ enum User {
     LastLogin,
     CreatedAt,
     UpdatedAt,
+}
+
+#[derive(DeriveIden)]
+enum UserIdentity {
+    Table,
+    UserId,
+    Provider,
+    Identifier,
+    CreatedAt,
 }

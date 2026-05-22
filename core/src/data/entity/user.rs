@@ -8,8 +8,6 @@ pub struct Model {
     #[sea_orm(primary_key, auto_increment = false)]
     pub id: Uuid,
     #[sea_orm(unique)]
-    pub discord_id: Option<String>,
-    #[sea_orm(unique)]
     pub username: String,
     #[sea_orm(unique)]
     pub friend_code: String,
@@ -21,6 +19,15 @@ pub struct Model {
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
-pub enum Relation {}
+pub enum Relation {
+    #[sea_orm(has_many = "super::user_identity::Entity")]
+    UserIdentity,
+}
+
+impl Related<super::user_identity::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::UserIdentity.def()
+    }
+}
 
 impl ActiveModelBehavior for ActiveModel {}

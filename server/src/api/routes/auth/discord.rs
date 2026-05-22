@@ -4,6 +4,7 @@ use axum::extract::{Query, State};
 use axum::response::Redirect;
 use axum::routing::get;
 use axum::Router;
+use checkmade_core::types::identity_provider::IdentityProvider;
 use oauth2::{AuthorizationCode, PkceCodeChallenge, PkceCodeVerifier, TokenResponse};
 use tower_sessions::Session;
 
@@ -63,13 +64,18 @@ async fn get_callback(
         return Err(ApiError::DiscordUserInvalid);
     };
 
-    let user = if let Some(user) = state.data.user.find_by_discord_id(&discord_user.id).await? {
+    let user = if let Some(user) = state
+        .data
+        .user
+        .find_by_identity(IdentityProvider::Discord, &discord_user.id)
+        .await?
+    {
         user
     } else {
         state
             .data
             .user
-            .create_from_discord(&discord_user.id)
+            .create_from_identity(IdentityProvider::Discord, &discord_user.id)
             .await?
     };
 
