@@ -27,6 +27,7 @@ no_friend_requests: x
 pending: x
 remove: x
 requests: x
+sandbox: x
 server_time: x
 settings: x
 ui_scale: x

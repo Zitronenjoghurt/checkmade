@@ -29,7 +29,7 @@ services:
     init: true
     command: >-
       cargo watch -w core -w server -w app --delay 3
-      -s "cd /checkmade/app && trunk build --filehash false
+      -s "cd /checkmade/app && trunk build --release --filehash false
       && cd /checkmade && cargo run --bin checkmade-server"
     environment:
       - STATIC_DIR=/checkmade/app/dist

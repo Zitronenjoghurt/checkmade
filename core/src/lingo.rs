@@ -31,6 +31,7 @@ pub enum Lingo {
     Pending,
     Remove,
     Requests,
+    Sandbox,
     ServerTime,
     Settings,
     UiScale,

@@ -4,9 +4,11 @@ use egui::{Ui, WidgetText};
 use strum::EnumIter;
 
 mod friends;
+mod sandbox;
 mod settings;
 
 pub struct TabViewer<'a> {
+    pub images: &'a mut crate::utils::images::Images,
     pub state: &'a mut crate::ui::state::UiState,
     pub server_time: &'a mut crate::server_time::ServerTime,
     pub store: &'a mut crate::store::Store,
@@ -24,6 +26,7 @@ impl<'a> egui_dock::TabViewer for TabViewer<'a> {
     fn ui(&mut self, ui: &mut Ui, tab: &mut Self::Tab) {
         match tab {
             Tab::Friends => friends::show(self, ui),
+            Tab::Sandbox => sandbox::show(self, ui),
             Tab::Settings => settings::show(self, ui),
         }
     }
@@ -40,6 +43,7 @@ impl<'a> egui_dock::TabViewer for TabViewer<'a> {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize, EnumIter)]
 pub enum Tab {
     Friends,
+    Sandbox,
     Settings,
 }
 
@@ -47,6 +51,7 @@ impl Tab {
     pub fn title(&self) -> String {
         match self {
             Tab::Friends => Friends.t().to_string(),
+            Tab::Sandbox => Sandbox.t().to_string(),
             Tab::Settings => Settings.t().to_string(),
         }
     }

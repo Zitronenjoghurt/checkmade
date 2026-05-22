@@ -57,6 +57,11 @@ pub async fn ws_handler(
             3000 - since_last_login as u64,
         ))
         .await;
+        let connection_count = state.ws.user_connection_count(user.id);
+        if connection_count >= state.config.max_user_connection_count {
+            counter!("ws.upgrade_rejected", "reason" => "too_many_connections").increment(1);
+            return Err(ApiError::TooManyConnections);
+        }
     }
 
     let message_size = state.config.max_ws_message_size_kb * 1024;

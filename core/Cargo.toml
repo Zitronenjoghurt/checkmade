@@ -5,6 +5,8 @@ edition = "2024"
 
 [features]
 data = ["async-trait", "futures", "migration", "nanoid", "petname", "sea-orm", "serde"]
+bitcode = ["dep:bitcode", "giga-chess/bitcode"]
+serde = ["dep:serde", "giga-chess/serde"]
 
 [dependencies]
 giga-chess = { workspace = true }

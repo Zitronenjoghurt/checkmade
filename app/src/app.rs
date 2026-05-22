@@ -10,6 +10,7 @@ use crate::ui::widgets::connection_status::ConnectionStatus;
 use crate::ui::widgets::generic_select::GenericSelect;
 use crate::ui::widgets::profile_menu::ProfileMenu;
 use crate::ui::widgets::with_badge::WithBadge;
+use crate::utils::images::Images;
 use crate::ws::Ws;
 use checkmade_core::lingo::Lingo::*;
 use checkmade_core::messages::server::ServerMessage;
@@ -21,6 +22,8 @@ use egui_notify::Toasts;
 pub struct Checkmade {
     dock: DockState<Tab>,
     ui: UiState,
+    #[serde(skip, default)]
+    images: Images,
     #[serde(skip, default)]
     server_time: ServerTime,
     #[serde(skip, default)]
@@ -38,6 +41,7 @@ impl Default for Checkmade {
         Self {
             dock: DockState::new(vec![]),
             ui: UiState::default(),
+            images: Images::default(),
             server_time: ServerTime::default(),
             store: Store::default(),
             toasts: Toasts::default(),
@@ -170,6 +174,7 @@ impl Checkmade {
 
         CentralPanel::default().show_inside(ui, |ui| {
             let mut viewer = TabViewer {
+                images: &mut self.images,
                 state: &mut self.ui,
                 server_time: &mut self.server_time,
                 store: &mut self.store,
@@ -208,6 +213,16 @@ impl Checkmade {
                     .on_hover_text(Friends.t());
                 if resp.clicked() {
                     self.open_tab(Tab::Friends);
+                }
+
+                ui.separator();
+
+                if ui
+                    .button(icons::CHECKERBOARD)
+                    .on_hover_text(Sandbox.t())
+                    .clicked()
+                {
+                    self.open_tab(Tab::Sandbox);
                 }
 
                 ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {

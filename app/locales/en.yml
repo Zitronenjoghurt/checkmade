@@ -27,6 +27,7 @@ no_friend_requests: No friend requests
 pending: Pending
 remove: Remove
 requests: Requests
+sandbox: Sandbox
 server_time: Server Time
 settings: Settings
 ui_scale: UI Scale
