@@ -1,3 +1,4 @@
+mod modal;
 pub mod state;
 pub mod tabs;
 pub mod widgets;

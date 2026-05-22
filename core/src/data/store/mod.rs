@@ -242,7 +242,7 @@ where
     }
 
     pub fn page_size(mut self, size: u64) -> Self {
-        self.page_size = size;
+        self.page_size = if size < 1 { 1 } else { size };
         self
     }
 

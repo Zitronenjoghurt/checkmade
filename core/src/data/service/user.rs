@@ -18,17 +18,18 @@ impl UserService {
         }
     }
 
-    pub fn public_info(&self, user: &user::Model) -> PublicUserInfo {
+    pub fn public_info(&self, user: &user::Model, is_online: bool) -> PublicUserInfo {
         PublicUserInfo {
             id: user.id.into(),
             username: user.username.clone(),
+            is_online,
         }
     }
 
     pub fn private_info(&self, user: &user::Model) -> PrivateUserInfo {
         PrivateUserInfo {
             friend_code: user.friend_code.clone(),
-            public: self.public_info(user),
+            public: self.public_info(user, true),
             permissions: user.permissions,
         }
     }

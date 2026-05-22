@@ -1,3 +1,4 @@
+pub mod config;
 #[cfg(feature = "data")]
 pub mod data;
 pub mod error;

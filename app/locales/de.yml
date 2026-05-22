@@ -1,20 +1,26 @@
 add_friend: Freund hinzufügen
+cancel: Abbrechen
 categories: Kategorien
+copied_to_clipboard: In die Zwischenablage kopiert
 fetching_user_info: Lade Benutzerinfos
 friend_request_declined: Freundschaftsanfrage abgelehnt
 friend_request_received: Freundschaftsanfrage empfangen
 friend_request_sent: Freundschaftsanfrage gesendet
 friend_removed: Freund entfernt
 friends: Freunde
+friends_since: Freunde seit
 friend_added: Freund hinzugefügt
 friend_code: Freundschaftscode
 general: Allgemein
 latency: Latenz
 list: Liste
 logout: Ausloggen
+modal_remove_friend_title: Freund entfernen
+modal_remove_friend_body: 'Willst du %{x} wirklich als freund entfernen?'
 no_friends: Keine Freunde
 no_friend_requests: Keine Freundschaftsanfragen
 pending: Ausstehend
+remove: Entfernen
 requests: Anfragen
 server_time: Serverzeit
 settings: Einstellungen

@@ -1,5 +1,5 @@
 use crate::config::Config;
-use crate::error::{ServerError, ServerResult, UserError};
+use crate::error::{ServerResult, UserError};
 use crate::server_time_ms;
 use crate::state::ServerState;
 use crate::websocket::rate_limiter::{RateLimitResult, RateLimiter};
@@ -231,7 +231,7 @@ impl WebsocketConnection {
             .state
             .service
             .friends
-            .paginate_friends(self.user_id, self.state.config.friend_limit as u64)
+            .paginate_friends(self.user_id, self.state.config.core.friend_limit)
             .fetch_page(0)
             .await?
             .into_iter()
@@ -257,7 +257,7 @@ impl WebsocketConnection {
             .state
             .service
             .friends
-            .paginate_received_requests(self.user_id, self.state.config.friend_limit as u64)
+            .paginate_received_requests(self.user_id, self.state.config.core.friend_limit)
             .fetch_page(0)
             .await?
             .into_iter()
@@ -282,7 +282,7 @@ impl WebsocketConnection {
             .state
             .service
             .friends
-            .paginate_sent_requests(self.user_id, self.state.config.friend_limit as u64)
+            .paginate_sent_requests(self.user_id, self.state.config.core.friend_limit)
             .fetch_page(0)
             .await?
             .into_iter()
@@ -327,8 +327,9 @@ impl WebsocketConnection {
             return Err(UserError::UserNotFound.into());
         };
 
+        let user_online = self.state.ws.is_user_connected(target_id);
         self.respond(ServerMessage::PublicUserInfo(
-            self.state.service.user.public_info(&user),
+            self.state.service.user.public_info(&user, user_online),
         ));
 
         Ok(())

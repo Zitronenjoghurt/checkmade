@@ -1,20 +1,26 @@
 add_friend: Add Friend
+cancel: Cancel
 categories: Categories
+copied_to_clipboard: Copied to clipboard
 fetching_user_info: Fetching user info
 friend_request_declined: Friend request declined
 friend_request_received: Friend request received
 friend_request_sent: Friend request sent
 friend_removed: Friend removed
 friends: Friends
+friends_since: Friends since
 friend_added: Friend added
 friend_code: Friend Code
 general: General
 latency: Latency
 list: List
 logout: Logout
+modal_remove_friend_title: Remove friend
+modal_remove_friend_body: 'Do you really want to remove %{x} from your friends list?'
 no_friends: No friends
 no_friend_requests: No friend requests
 pending: Pending
+remove: Remove
 requests: Requests
 server_time: Server Time
 settings: Settings

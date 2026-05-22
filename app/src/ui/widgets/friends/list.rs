@@ -35,8 +35,8 @@ impl<'a> egui::Widget for Friendlist<'a> {
                     } else {
                         for (id, since) in friends {
                             if let Some(info) = self.store.users.get(*id) {
-                                let since = self.server_time.to_local_datetime(*since);
-                                FriendWidget::new(info, self.ws, since).ui(ui);
+                                let elapsed = self.server_time.elapsed_since(*since);
+                                FriendWidget::new(info, self.ws, elapsed).ui(ui);
                             } else {
                                 ui.spinner();
                             }

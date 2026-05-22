@@ -10,8 +10,14 @@ pub enum CoreError {
     Database(#[from] sea_orm::error::DbErr),
     #[error(transparent)]
     Domain(#[from] DomainError),
+    #[error("Error reading environment variable: {0}")]
+    Env(#[from] std::env::VarError),
     #[error("Invalid friendship status: {0}")]
     InvalidFriendshipStatus(i16),
+    #[error("Parse int error: {0}")]
+    ParseInt(#[from] std::num::ParseIntError),
+    #[error("Parse float error: {0}")]
+    ParseFloat(#[from] std::num::ParseFloatError),
 }
 
 impl CoreError {
@@ -30,6 +36,14 @@ pub enum DomainError {
     AlreadyReceivedFriendRequest,
     #[error("You cannot send a friend request to this user.")]
     FriendRequestBlocked,
+    #[error(
+        "You or the other person have reached the friend limit (max {0}) and cannot add any more friends."
+    )]
+    FriendLimitReached(u64),
+    #[error(
+        "You or the other person have reached the friend request limit (max {0}) and cannot send or receive any more friend requests."
+    )]
+    FriendRequestLimitReached(u64),
     #[error("This friend code is invalid.")]
     InvalidFriendCode,
     #[error("You have no friend request from this user.")]

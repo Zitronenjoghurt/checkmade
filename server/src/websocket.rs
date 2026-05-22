@@ -1,8 +1,14 @@
 use crate::websocket::connection::ConnectionId;
+use checkmade_core::data::service::Services;
+use checkmade_core::data::store::Store;
+use checkmade_core::data::Data;
 use checkmade_core::messages::server::ServerMessage;
+use checkmade_core::types::user_info::PublicUserInfo;
 use dashmap::DashMap;
+use futures_util::TryStreamExt;
 use metrics::{counter, gauge};
 use std::collections::HashSet;
+use std::sync::Arc;
 use tokio::sync::mpsc;
 use tracing::info;
 use uuid::Uuid;
@@ -11,30 +17,52 @@ mod connection;
 pub mod handler;
 mod rate_limiter;
 
-#[derive(Default)]
 pub struct Websocket {
     connections: DashMap<ConnectionId, (Uuid, mpsc::Sender<ServerMessage>)>,
     users: DashMap<Uuid, HashSet<ConnectionId>>,
+    data: Arc<Data>,
+    service: Arc<Services>,
 }
 
 impl Websocket {
-    pub fn register(&self, user_id: Uuid) -> (ConnectionId, mpsc::Receiver<ServerMessage>) {
+    pub fn new(data: &Arc<Data>, service: &Arc<Services>) -> Self {
+        Self {
+            connections: DashMap::new(),
+            users: DashMap::new(),
+            data: Arc::clone(data),
+            service: Arc::clone(service),
+        }
+    }
+
+    pub fn register(
+        self: &Arc<Self>,
+        user_id: Uuid,
+    ) -> (ConnectionId, mpsc::Receiver<ServerMessage>) {
         let connection_id = ConnectionId::new_v4();
         let (tx, rx) = mpsc::channel(100);
         self.connections.insert(connection_id, (user_id, tx));
 
-        let count = {
+        let (count, is_first) = {
             let mut entry = self.users.entry(user_id).or_default();
+            let is_first = entry.is_empty();
             entry.insert(connection_id);
-            entry.len()
+            (entry.len(), is_first)
         };
 
         info!("User '{user_id}' connected ({connection_id}). Active connections for user: {count}");
         gauge!("ws.unique_users").set(self.users.len() as f64);
+
+        if is_first {
+            let this = Arc::clone(self);
+            tokio::spawn(async move {
+                this.on_user_online(user_id).await;
+            });
+        }
+
         (connection_id, rx)
     }
 
-    pub fn unregister(&self, connection_id: ConnectionId) {
+    pub fn unregister(self: &Arc<Self>, connection_id: ConnectionId) {
         let Some((_, (user_id, _))) = self.connections.remove(&connection_id) else {
             return;
         };
@@ -53,6 +81,11 @@ impl Websocket {
             self.users.remove(&user_id);
             info!("All connections closed for '{}'.", user_id);
             gauge!("ws.unique_users").set(self.users.len() as f64);
+
+            let this = Arc::clone(self);
+            tokio::spawn(async move {
+                this.on_user_offline(user_id).await;
+            });
         }
     }
 
@@ -89,5 +122,34 @@ impl Websocket {
 
     pub fn connection_user_id(&self, connection_id: ConnectionId) -> Option<Uuid> {
         self.connections.get(&connection_id).map(|c| c.0)
+    }
+}
+
+// Event handling
+impl Websocket {
+    pub async fn on_user_online(&self, id: Uuid) {
+        let Ok(Some(user)) = self.data.user.find_by_id(id).await else {
+            return;
+        };
+        let info = self.service.user.public_info(&user, true);
+        self.on_friend_user_info_update(info).await;
+    }
+
+    pub async fn on_user_offline(&self, id: Uuid) {
+        let Ok(Some(user)) = self.data.user.find_by_id(id).await else {
+            return;
+        };
+        let info = self.service.user.public_info(&user, false);
+        self.on_friend_user_info_update(info).await;
+    }
+
+    pub async fn on_friend_user_info_update(&self, info: PublicUserInfo) {
+        let Ok(mut friend_id_stream) = self.data.friends.stream_friend_ids_of(info.id.into()).await
+        else {
+            return;
+        };
+        while let Some(id) = friend_id_stream.try_next().await.unwrap_or(None) {
+            self.send_to_user(id, ServerMessage::PublicUserInfo(info.clone()));
+        }
     }
 }

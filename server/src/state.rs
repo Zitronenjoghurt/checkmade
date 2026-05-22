@@ -17,14 +17,14 @@ pub struct ServerState {
 
 impl ServerState {
     pub async fn new(config: Config) -> ServerResult<Self> {
-        let data = Arc::new(Data::initialize(&config.database_url).await?);
-        let service = Arc::new(Services::new(&data));
+        let data = Arc::new(Data::initialize(&config.core, &config.database_url).await?);
+        let service = Arc::new(Services::new(&config.core, &data));
         Ok(Self {
+            ws: Arc::new(Websocket::new(&data, &service)),
             data,
             service,
             integrations: Arc::new(Integrations::new(&config.integrations)?),
             config: Arc::new(config),
-            ws: Arc::new(Websocket::default()),
         })
     }
 }

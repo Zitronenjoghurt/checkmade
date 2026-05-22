@@ -2,56 +2,40 @@ use crate::i18n::Translatable;
 use crate::server_time::ServerTime;
 use crate::store::Store;
 use crate::tl;
-use crate::ui::icons;
 use crate::utils::fmt::fmt_duration;
 use checkmade_core::lingo::Lingo::*;
 use egui::{Frame, Response, ScrollArea, Ui};
 
-pub struct FriendIncoming<'a> {
+pub struct FriendOutgoing<'a> {
     server_time: &'a ServerTime,
     store: &'a mut Store,
-    ws: &'a mut crate::ws::Ws,
 }
 
-impl<'a> FriendIncoming<'a> {
-    pub fn new(
-        server_time: &'a ServerTime,
-        store: &'a mut Store,
-        ws: &'a mut crate::ws::Ws,
-    ) -> Self {
-        Self {
-            server_time,
-            store,
-            ws,
-        }
+impl<'a> FriendOutgoing<'a> {
+    pub fn new(server_time: &'a ServerTime, store: &'a mut Store) -> Self {
+        Self { server_time, store }
     }
 }
 
-impl egui::Widget for FriendIncoming<'_> {
+impl egui::Widget for FriendOutgoing<'_> {
     fn ui(self, ui: &mut Ui) -> Response {
-        let Some(incoming) = self.store.incoming_friend_requests.value.as_ref() else {
+        let Some(outgoing) = self.store.outgoing_friend_requests.value.as_ref() else {
             return ui.spinner();
         };
 
-        if incoming.is_empty() {
+        if outgoing.is_empty() {
             return ui.label(NoFriendRequests.t());
         };
 
         ScrollArea::vertical()
             .show(ui, |ui| {
                 ui.vertical(|ui| {
-                    for (id, since) in incoming {
+                    for (id, since) in outgoing {
                         let elapsed = self.server_time.elapsed_since(*since);
                         Frame::group(ui.style()).show(ui, |ui| {
                             ui.set_min_width(ui.available_width());
                             if let Some(info) = self.store.users.get(*id) {
                                 ui.horizontal(|ui| {
-                                    if ui.button(icons::CHECK_CIRCLE).clicked() {
-                                        self.ws.accept_friend_request(*id);
-                                    }
-                                    if ui.button(icons::X_CIRCLE).clicked() {
-                                        self.ws.decline_friend_request(*id);
-                                    }
                                     ui.strong(&info.username);
                                     ui.separator();
                                     ui.small(tl!(XAgo, x = fmt_duration(elapsed)));

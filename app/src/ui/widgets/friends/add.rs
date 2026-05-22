@@ -2,20 +2,22 @@ use crate::i18n::Translatable;
 use crate::store::Store;
 use crate::ui::icons;
 use crate::ui::widgets::validated_input::ValidatedInput;
-use checkmade_core::lingo::Lingo::{AddFriend, FriendCode};
+use checkmade_core::lingo::Lingo::*;
 use checkmade_core::types::friend_code::{
     friend_code_char_filter, is_valid_friend_code, FRIEND_CODE_LENGTH,
 };
 use egui::{Id, Response, Ui};
+use egui_notify::Toasts;
 
 pub struct FriendAdd<'a> {
     store: &'a mut Store,
+    toasts: &'a mut Toasts,
     ws: &'a mut crate::ws::Ws,
 }
 
 impl<'a> FriendAdd<'a> {
-    pub fn new(store: &'a mut Store, ws: &'a mut crate::ws::Ws) -> Self {
-        Self { store, ws }
+    pub fn new(store: &'a mut Store, toasts: &'a mut Toasts, ws: &'a mut crate::ws::Ws) -> Self {
+        Self { store, toasts, ws }
     }
 }
 
@@ -52,12 +54,11 @@ impl egui::Widget for FriendAdd<'_> {
 
                             if code_visible && ui.button(icons::COPY).clicked() {
                                 ui.ctx().copy_text(display);
+                                self.toasts.info(CopiedToClipboard.t());
                             }
                         }
                     });
                 });
-
-                ui.separator();
 
                 ui.group(|ui| {
                     ui.label(AddFriend.t());

@@ -7,6 +7,7 @@ use crate::types::user_id::UserId;
 pub struct PublicUserInfo {
     pub id: UserId,
     pub username: String,
+    pub is_online: bool,
 }
 
 #[derive(Clone)]

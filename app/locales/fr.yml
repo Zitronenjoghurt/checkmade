@@ -1,20 +1,26 @@
 add_friend: x
+cancel: x
 categories: x
+copied_to_clipboard: x
 fetching_user_info: x
 friend_request_declined: x
 friend_request_received: x
 friend_request_sent: x
 friend_removed: x
 friends: x
+friends_since: x
 friend_added: x
 friend_code: x
 general: x
 latency: x
 list: x
 logout: x
+modal_remove_friend_title: x
+modal_remove_friend_body: 'Do you really want to remove %{x} from your friends list?'
 no_friends: x
 no_friend_requests: x
 pending: x
+remove: x
 requests: x
 server_time: x
 settings: x

@@ -140,4 +140,8 @@ impl Ws {
     pub fn send_friend_request(&mut self, friend_code: String) {
         self.send(ClientMessage::SendFriendRequest { friend_code });
     }
+
+    pub fn remove_friend(&mut self, id: UserId) {
+        self.send(ClientMessage::RemoveFriend(id));
+    }
 }

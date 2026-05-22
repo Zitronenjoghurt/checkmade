@@ -8,6 +8,7 @@ mod i18n;
 mod server_time;
 mod store;
 mod ui;
+mod utils;
 mod ws;
 
 pub use app::Checkmade;

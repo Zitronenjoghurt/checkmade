@@ -49,7 +49,7 @@ impl UserStore {
     ) -> CoreResult<user::Model> {
         let txn = self.db().begin().await?;
 
-        let username = petname(3, "-").unwrap();
+        let username = petname(2, "-").unwrap();
         let friend_code = generate_friend_code();
 
         let new_user = user::ActiveModel {

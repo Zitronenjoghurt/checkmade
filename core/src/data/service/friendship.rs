@@ -1,3 +1,4 @@
+use crate::config::CoreConfig;
 use crate::data::entity::friendship;
 use crate::data::store::{Paginate, Store};
 use crate::data::Data;
@@ -9,12 +10,14 @@ use std::sync::Arc;
 use uuid::Uuid;
 
 pub struct FriendshipService {
+    config: Arc<CoreConfig>,
     data: Arc<Data>,
 }
 
 impl FriendshipService {
-    pub fn new(data: &Arc<Data>) -> Self {
+    pub fn new(config: &Arc<CoreConfig>, data: &Arc<Data>) -> Self {
         Self {
+            config: Arc::clone(config),
             data: Arc::clone(data),
         }
     }
@@ -65,6 +68,16 @@ impl FriendshipService {
         source_id: Uuid,
         target_id: Uuid,
     ) -> CoreResult<friendship::Model> {
+        let requester_friends = self.data.friends.count_friends(source_id).await?;
+        if requester_friends >= self.config.friend_limit {
+            return Err(DomainError::FriendLimitReached(self.config.friend_limit).into());
+        }
+
+        let addressee_friends = self.data.friends.count_friends(target_id).await?;
+        if addressee_friends >= self.config.friend_limit {
+            return Err(DomainError::FriendLimitReached(self.config.friend_limit).into());
+        }
+
         let pending = self.pending_request(source_id, target_id).await?;
         let mut active = pending.into_active_model();
         active.status = Set(FriendshipStatus::Accepted as i16);

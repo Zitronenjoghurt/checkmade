@@ -3,6 +3,7 @@ use crate::ui::widgets::friends::add::FriendAdd;
 use crate::ui::widgets::friends::bar::FriendsBar;
 use crate::ui::widgets::friends::incoming::FriendIncoming;
 use crate::ui::widgets::friends::list::Friendlist;
+use crate::ui::widgets::friends::outgoing::FriendOutgoing;
 use crate::ui::widgets::friends::FriendsTab;
 use egui::Widget;
 
@@ -22,9 +23,11 @@ pub fn show(v: &mut TabViewer, ui: &mut egui::Ui) {
                     FriendsTab::Incoming => {
                         FriendIncoming::new(v.server_time, v.store, v.ws).ui(ui);
                     }
-                    FriendsTab::Outgoing => {}
+                    FriendsTab::Outgoing => {
+                        FriendOutgoing::new(v.server_time, v.store).ui(ui);
+                    }
                     FriendsTab::AddFriend => {
-                        FriendAdd::new(v.store, v.ws).ui(ui);
+                        FriendAdd::new(v.store, v.toasts, v.ws).ui(ui);
                     }
                 }
             });

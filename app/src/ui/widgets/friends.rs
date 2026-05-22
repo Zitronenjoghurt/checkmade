@@ -8,6 +8,7 @@ pub mod bar;
 pub mod friend;
 pub mod incoming;
 pub mod list;
+pub mod outgoing;
 
 #[derive(
     Debug, Default, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize, EnumIter,

@@ -3,6 +3,7 @@ use migration::prelude::chrono;
 use migration::{Migrator, MigratorTrait};
 use sea_orm::sqlx::PgPool;
 use sea_orm::{ConnectOptions, DatabaseConnection, DatabaseTransaction, TransactionTrait};
+use std::sync::Arc;
 use tracing::info;
 
 pub mod entity;
@@ -10,16 +11,21 @@ mod ext;
 pub mod service;
 pub mod store;
 
+use crate::config::CoreConfig;
 pub use sea_orm::{IntoActiveModel, Set};
 
 pub struct Data {
+    config: Arc<CoreConfig>,
     connection: DatabaseConnection,
     pub friends: store::friendship::FriendshipStore,
     pub user: store::user::UserStore,
 }
 
 impl Data {
-    pub async fn initialize(database_url: impl AsRef<str>) -> CoreResult<Self> {
+    pub async fn initialize(
+        config: &Arc<CoreConfig>,
+        database_url: impl AsRef<str>,
+    ) -> CoreResult<Self> {
         let options = ConnectOptions::new(database_url.as_ref());
 
         info!("Connecting to database...");
@@ -27,8 +33,9 @@ impl Data {
         info!("Connected to database!");
 
         let data = Self {
-            friends: store::friendship::FriendshipStore::new(&connection),
+            friends: store::friendship::FriendshipStore::new(config, &connection),
             user: store::user::UserStore::new(&connection),
+            config: Arc::clone(config),
             connection,
         };
         data.apply_migrations().await?;
