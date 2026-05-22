@@ -1,5 +1,5 @@
 use crate::game::coords::BoardCoords;
-use giga_chess::prelude::{ChessBoard, Color, Piece, Square};
+use giga_chess::prelude::{ChessBoard, Color, Game, Piece, Square};
 
 #[derive(Debug, Default, Clone, Eq, PartialEq)]
 #[cfg_attr(feature = "bitcode", derive(bitcode::Encode, bitcode::Decode))]
@@ -9,6 +9,18 @@ pub struct BoardVisuals {
     pub last_move_to: Option<Square>,
     pub perspective: Color,
     pub pieces: Vec<PieceVisuals>,
+}
+
+impl BoardVisuals {
+    pub fn from_game(perspective: Color, game: &Game) -> Self {
+        let last_move = game.history().last();
+        Self {
+            last_move_from: last_move.map(|mv| mv.from()),
+            last_move_to: last_move.map(|mv| mv.to()),
+            perspective,
+            pieces: PieceVisuals::from_board(&game.position().board),
+        }
+    }
 }
 
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]

@@ -1,12 +1,12 @@
 use crate::ui::widgets::friends::FriendsTab;
-use checkmade_core::game::visuals::BoardVisuals;
 
+pub mod sandbox;
 pub mod settings;
 
 #[derive(Default, serde::Serialize, serde::Deserialize)]
 pub struct UiState {
     pub friends_tab: FriendsTab,
-    pub sandbox_board: BoardVisuals,
+    pub sandbox_board: sandbox::SandboxState,
     pub settings: settings::Settings,
 }
 

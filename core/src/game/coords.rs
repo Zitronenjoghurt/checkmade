@@ -16,3 +16,11 @@ impl From<Square> for BoardCoords {
         }
     }
 }
+
+impl From<BoardCoords> for Square {
+    fn from(c: BoardCoords) -> Self {
+        let file = ((c.x >> 11) + 7) / 2 + 1;
+        let rank = ((c.y >> 11) + 7) / 2 + 1;
+        Square::from_file_rank(file as u8, rank as u8)
+    }
+}
