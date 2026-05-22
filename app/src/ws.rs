@@ -1,4 +1,8 @@
 use crate::client_time_ms;
+use crate::event::{AppEvent, DisconnectedEvent, ErrorEvent, InfoEvent, ReconnectedEvent};
+use crate::i18n::Translatable;
+use crate::utils::fmt::fmt_duration;
+use checkmade_core::lingo::Lingo::AttemptingReconnect;
 use checkmade_core::messages::client::ClientMessage;
 use checkmade_core::messages::server::ServerMessage;
 use checkmade_core::types::user_id::UserId;
@@ -17,28 +21,39 @@ pub enum WsState {
 }
 
 pub struct Ws {
+    url: Option<String>,
     state: WsState,
     sender: Option<WsSender>,
     receiver: Option<WsReceiver>,
     incoming: Vec<ServerMessage>,
+    was_connected: bool,
+    reconnect_at: Option<u64>,
+    reconnect_attempt: u32,
 }
 
 impl Default for Ws {
     fn default() -> Self {
         Self {
+            url: None,
             state: WsState::Idle,
             sender: None,
             receiver: None,
             incoming: Vec::new(),
+            was_connected: false,
+            reconnect_at: None,
+            reconnect_attempt: 0,
         }
     }
 }
 
 impl Ws {
     pub fn connect(&mut self, url: impl Into<String>) {
+        let url = url.into();
+        self.url = Some(url.clone());
+
         if matches!(self.state, WsState::Idle | WsState::Error(_)) {
             self.state = WsState::Connecting;
-            match ewebsock::connect(url.into(), ewebsock::Options::default()) {
+            match ewebsock::connect(url, ewebsock::Options::default()) {
                 Ok((sender, receiver)) => {
                     self.sender = Some(sender);
                     self.receiver = Some(receiver);
@@ -60,7 +75,7 @@ impl Ws {
         matches!(self.state, WsState::Connected)
     }
 
-    pub fn update(&mut self, toasts: &mut egui_notify::Toasts) {
+    pub fn update(&mut self, ctx: &egui::Context) {
         let Some(receiver) = &self.receiver else {
             return;
         };
@@ -75,7 +90,7 @@ impl Ws {
                         match ServerMessage::from_bytes(&bytes) {
                             Ok(msg) => self.incoming.push(msg),
                             Err(err) => {
-                                toasts.error(err.to_string());
+                                ErrorEvent(format!("Failed to parse message: {}", err)).send(ctx);
                             }
                         }
                     }
@@ -88,6 +103,26 @@ impl Ws {
                 }
             }
         }
+
+        let connected = self.is_connected();
+        if self.was_connected && !connected {
+            DisconnectedEvent.send(ctx);
+            self.schedule_reconnect(ctx);
+        }
+        if !self.was_connected && connected {
+            ReconnectedEvent.send(ctx);
+            self.reconnect_at = None;
+            self.reconnect_attempt = 0;
+        }
+        self.was_connected = connected;
+
+        if let (Some(url), Some(at)) = (self.url.clone(), self.reconnect_at)
+            && !connected
+            && client_time_ms() >= at
+        {
+            self.schedule_reconnect(ctx);
+            self.connect(url);
+        }
     }
 
     pub fn drain_incoming(&mut self) -> std::vec::Drain<'_, ServerMessage> {
@@ -98,6 +133,19 @@ impl Ws {
         if let Some(sender) = &mut self.sender {
             sender.send(WsMessage::Binary(msg.as_bytes()));
         }
+    }
+
+    fn schedule_reconnect(&mut self, ctx: &egui::Context) {
+        let delay = (3000 * 2u64.pow(self.reconnect_attempt.min(3))).min(60_000);
+        self.reconnect_at = Some(client_time_ms() + delay);
+        self.reconnect_attempt += 1;
+        let duration = web_time::Duration::from_millis(delay);
+        InfoEvent(format!(
+            "{}... ({})",
+            AttemptingReconnect.t(),
+            fmt_duration(duration)
+        ))
+        .send(ctx);
     }
 }
 

@@ -1,7 +1,12 @@
 add_friend: Add Friend
+attempting_reconnect: Attempting reconnect
 cancel: Cancel
 categories: Categories
+connected: Connected
+connection_established: Connection established
+connection_lost: Connection lost
 copied_to_clipboard: Copied to clipboard
+disconnected: Disconnected
 fetching_user_info: Fetching user info
 friend_request_declined: Friend request declined
 friend_request_received: Friend request received

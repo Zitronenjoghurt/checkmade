@@ -49,4 +49,10 @@ impl<K: Eq + Hash + Copy, V> FetchableCache<K, V> {
     pub fn set(&mut self, key: K, value: V) {
         self.entries.entry(key).or_default().set_value(value);
     }
+
+    pub fn invalidate(&mut self) {
+        for entry in self.entries.values_mut() {
+            entry.invalidate();
+        }
+    }
 }

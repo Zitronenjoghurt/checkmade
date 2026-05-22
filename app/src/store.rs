@@ -1,3 +1,4 @@
+use crate::event::{AppEvent, ReconnectedEvent};
 use crate::ws::cache::FetchableCache;
 use crate::ws::fetchable::Fetchable;
 use checkmade_core::types::user_id::UserId;
@@ -25,7 +26,11 @@ impl Default for Store {
 }
 
 impl Store {
-    pub fn update(&mut self, ws: &mut crate::ws::Ws) {
+    pub fn update(&mut self, ctx: &egui::Context, ws: &mut crate::ws::Ws) {
+        if ReconnectedEvent::fired(ctx) {
+            self.invalidate();
+        }
+
         self.friends.request_if_needed(|| ws.request_friends());
         self.incoming_friend_requests
             .request_if_needed(|| ws.request_incoming_friend_requests());
@@ -33,6 +38,14 @@ impl Store {
         self.outgoing_friend_requests
             .request_if_needed(|| ws.request_outgoing_friend_requests());
         self.users.update(|id| ws.request_public_user_info(id));
+    }
+
+    fn invalidate(&mut self) {
+        self.friends.invalidate();
+        self.incoming_friend_requests.invalidate();
+        self.outgoing_friend_requests.invalidate();
+        self.me.invalidate();
+        self.users.invalidate();
     }
 
     pub fn friend_request_count(&self) -> usize {

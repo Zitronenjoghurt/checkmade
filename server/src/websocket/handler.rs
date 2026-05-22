@@ -43,9 +43,21 @@ pub async fn ws_handler(
 
     counter!("ws.upgrade_accepted").increment(1);
 
+    let last_login = user.last_login;
+
     let mut active_user = user.into_active_model();
     active_user.last_login = Set(chrono_now());
     let user = state.data.user.update(active_user).await?;
+
+    let since_last_login = chrono_now()
+        .signed_duration_since(last_login)
+        .num_milliseconds();
+    if since_last_login < 3000 {
+        tokio::time::sleep(std::time::Duration::from_millis(
+            3000 - since_last_login as u64,
+        ))
+        .await;
+    }
 
     let message_size = state.config.max_ws_message_size_kb * 1024;
     let write_buffer_size = state.config.max_ws_outbound_buffer_size_kb * 1024;

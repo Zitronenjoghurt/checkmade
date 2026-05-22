@@ -1,7 +1,12 @@
 add_friend: Freund hinzufügen
+attempting_reconnect: Verbindung wird wiederhergestellt
 cancel: Abbrechen
 categories: Kategorien
+connected: Verbunden
+connection_established: Verbindung hergestellt
+connection_lost: Verbindung verloren
 copied_to_clipboard: In die Zwischenablage kopiert
+disconnected: Verbindung getrennt
 fetching_user_info: Lade Benutzerinfos
 friend_request_declined: Freundschaftsanfrage abgelehnt
 friend_request_received: Freundschaftsanfrage empfangen

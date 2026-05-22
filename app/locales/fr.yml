@@ -1,7 +1,12 @@
 add_friend: x
+attempting_reconnect: x
 cancel: x
 categories: x
+connected: x
+connection_established: x
+connection_lost: x
 copied_to_clipboard: x
+disconnected: x
 fetching_user_info: x
 friend_request_declined: x
 friend_request_received: x

@@ -3,6 +3,7 @@ extern crate rust_i18n;
 i18n!("locales");
 
 mod app;
+mod event;
 mod http;
 mod i18n;
 mod server_time;

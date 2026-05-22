@@ -1,3 +1,4 @@
+use crate::config::CoreConfig;
 use crate::error::CoreResult;
 use migration::prelude::chrono;
 use migration::{Migrator, MigratorTrait};
@@ -11,7 +12,6 @@ mod ext;
 pub mod service;
 pub mod store;
 
-use crate::config::CoreConfig;
 pub use sea_orm::{IntoActiveModel, Set};
 
 pub struct Data {

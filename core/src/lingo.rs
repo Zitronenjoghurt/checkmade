@@ -3,9 +3,14 @@ use strum::EnumIter;
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, EnumIter)]
 pub enum Lingo {
     AddFriend,
+    AttemptingReconnect,
     Cancel,
     Categories,
+    Connected,
+    ConnectionEstablished,
+    ConnectionLost,
     CopiedToClipboard,
+    Disconnected,
     FetchingUserInfo,
     FriendRequestDeclined,
     FriendRequestReceived,

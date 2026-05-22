@@ -1,4 +1,5 @@
 use crate::client_time_ms;
+use crate::event::{AppEvent, ReconnectedEvent};
 use crate::ws::Ws;
 use chrono::{DateTime, TimeZone, Utc};
 use std::collections::VecDeque;
@@ -37,9 +38,13 @@ impl Default for ServerTime {
 }
 
 impl ServerTime {
-    pub fn update(&mut self, ws: &mut Ws) {
+    pub fn update(&mut self, ctx: &egui::Context, ws: &mut Ws) {
         if !ws.is_connected() {
             return;
+        }
+
+        if ReconnectedEvent::fired(ctx) {
+            *self = Default::default();
         }
 
         let now = client_time_ms();

@@ -1,3 +1,4 @@
+pub mod connection_status;
 pub mod friends;
 pub mod generic_multi_select;
 pub mod generic_select;

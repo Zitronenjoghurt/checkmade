@@ -74,6 +74,10 @@ impl<T> Fetchable<T> {
     pub fn state(&self) -> &FetchState {
         &self.state
     }
+
+    pub fn invalidate(&mut self) {
+        self.state = FetchState::Idle;
+    }
 }
 
 impl<K: Eq + Hash, V> Fetchable<HashMap<K, V>> {
@@ -94,7 +98,7 @@ impl<K: Eq + Hash, V> Fetchable<HashMap<K, V>> {
     }
 
     pub fn contains_key(&self, key: &K) -> bool {
-        self.value.as_ref().map_or(false, |m| m.contains_key(key))
+        self.value.as_ref().is_some_and(|m| m.contains_key(key))
     }
 }
 
@@ -110,6 +114,6 @@ impl<T: Eq + Hash> Fetchable<HashSet<T>> {
     }
 
     pub fn contains(&self, item: &T) -> bool {
-        self.value.as_ref().map_or(false, |s| s.contains(item))
+        self.value.as_ref().is_some_and(|s| s.contains(item))
     }
 }

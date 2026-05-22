@@ -1,3 +1,4 @@
+use crate::event::*;
 use crate::http::Http;
 use crate::i18n::Translatable;
 use crate::server_time::ServerTime;
@@ -5,6 +6,7 @@ use crate::store::Store;
 use crate::ui::icons;
 use crate::ui::state::UiState;
 use crate::ui::tabs::{Tab, TabViewer};
+use crate::ui::widgets::connection_status::ConnectionStatus;
 use crate::ui::widgets::generic_select::GenericSelect;
 use crate::ui::widgets::profile_menu::ProfileMenu;
 use crate::ui::widgets::with_badge::WithBadge;
@@ -68,20 +70,16 @@ impl Checkmade {
 
 impl eframe::App for Checkmade {
     fn ui(&mut self, ui: &mut egui::Ui, _frame: &mut eframe::Frame) {
+        self.handle_events(ui.ctx());
         self.http.update(&mut self.toasts);
-        self.update_ws();
+        self.update_ws(ui);
         if self.ws.is_connected() {
-            self.server_time.update(&mut self.ws);
-            self.store.update(&mut self.ws);
+            self.server_time.update(ui.ctx(), &mut self.ws);
+            self.store.update(ui.ctx(), &mut self.ws);
         }
         self.toasts.show(ui.ctx());
         self.render(ui);
         ui.ctx().request_repaint();
-
-        if self.server_time.is_timed_out() && self.ws.is_connected() {
-            self.ws.disconnect();
-            self.toasts.error("Connection timed out.");
-        }
     }
 
     fn save(&mut self, storage: &mut dyn eframe::Storage) {
@@ -91,8 +89,8 @@ impl eframe::App for Checkmade {
 
 // Update helpers
 impl Checkmade {
-    pub fn update_ws(&mut self) {
-        self.ws.update(&mut self.toasts);
+    pub fn update_ws(&mut self, ui: &egui::Ui) {
+        self.ws.update(ui.ctx());
         let messages = self.ws.drain_incoming().collect::<Vec<_>>();
         for msg in messages {
             self.handle_message(msg);
@@ -191,6 +189,8 @@ impl Checkmade {
             ui.horizontal(|ui| {
                 ui.label("Checkmade");
                 ui.separator();
+                ConnectionStatus::new(&self.server_time, &self.ws).ui(ui);
+                ui.separator();
 
                 if ui
                     .button(icons::GEAR_SIX)
@@ -227,5 +227,28 @@ impl Checkmade {
             return;
         }
         self.dock.main_surface_mut().push_to_focused_leaf(tab);
+    }
+}
+
+// Event handling
+impl Checkmade {
+    fn handle_events(&mut self, ctx: &egui::Context) {
+        flush_all_events(ctx);
+
+        for ErrorEvent(err) in ErrorEvent::recv(ctx) {
+            self.toasts.error(err);
+        }
+
+        for InfoEvent(info) in InfoEvent::recv(ctx) {
+            self.toasts.info(info);
+        }
+
+        if DisconnectedEvent::fired(ctx) {
+            self.toasts.error(ConnectionLost.t());
+        }
+
+        if ReconnectedEvent::fired(ctx) {
+            self.toasts.success(ConnectionEstablished.t());
+        }
     }
 }
