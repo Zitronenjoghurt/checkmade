@@ -18,6 +18,18 @@ pub enum CoreError {
     ParseInt(#[from] std::num::ParseIntError),
     #[error("Parse float error: {0}")]
     ParseFloat(#[from] std::num::ParseFloatError),
+    #[error("Session config serialization error: {0}")]
+    SessionConfigSerialization(String),
+    #[error("Session config deserialization error: {0}")]
+    SessionConfigDeserialization(String),
+    #[error("Session creation error: {0}")]
+    SessionCreation(String),
+    #[error("Session serialization error: {0}")]
+    SessionSerialization(String),
+    #[error("Session deserialization error: {0}")]
+    SessionDeserialization(String),
+    #[error("Session restoration error: {0}")]
+    SessionRestoration(String),
 }
 
 impl CoreError {
@@ -50,4 +62,12 @@ pub enum DomainError {
     NoFriendRequest,
     #[error("You are not friends with this user.")]
     NotFriends,
+    #[error(
+        "You or your opponent have reached their session limit (max {0}) and cannot create any more sessions."
+    )]
+    SessionLimitReached(u64),
+    #[error(
+        "You or your opponent have reached their session request limit (max {0}) and cannot create or receive any more session requests."
+    )]
+    SessionRequestLimitReached(u64),
 }

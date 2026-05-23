@@ -5,6 +5,8 @@ use sea_orm::sea_query::IntoCondition;
 use sea_orm::*;
 
 pub mod friendship;
+pub mod session;
+mod session_request;
 pub mod user;
 
 #[async_trait::async_trait]
@@ -131,6 +133,18 @@ pub trait Store {
 
     async fn count_all(&self) -> CoreResult<u64> {
         PaginatorTrait::count(Self::Entity::find(), self.db())
+            .await
+            .map_err(Into::into)
+    }
+
+    async fn count_with<C, F>(conn: &C, filter: F) -> CoreResult<u64>
+    where
+        C: ConnectionTrait,
+        F: IntoCondition + Send,
+    {
+        Self::Entity::find()
+            .filter(filter)
+            .count(conn)
             .await
             .map_err(Into::into)
     }

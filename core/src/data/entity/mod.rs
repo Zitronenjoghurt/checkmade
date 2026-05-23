@@ -3,5 +3,7 @@
 pub mod prelude;
 
 pub mod friendship;
+pub mod session;
+pub mod session_request;
 pub mod user;
 pub mod user_identity;
