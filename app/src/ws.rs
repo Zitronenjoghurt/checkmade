@@ -157,6 +157,10 @@ impl Ws {
         });
     }
 
+    pub fn request_active_sessions(&mut self) {
+        self.send(ClientMessage::ActiveSessions);
+    }
+
     pub fn request_friends(&mut self) {
         self.send(ClientMessage::Friends);
     }
@@ -165,8 +169,20 @@ impl Ws {
         self.send(ClientMessage::IncomingFriendRequests);
     }
 
+    pub fn request_incoming_session_requests(&mut self) {
+        self.send(ClientMessage::IncomingSessionRequests);
+    }
+
     pub fn request_outgoing_friend_requests(&mut self) {
         self.send(ClientMessage::OutgoingFriendRequests);
+    }
+
+    pub fn request_outgoing_session_requests(&mut self) {
+        self.send(ClientMessage::OutgoingSessionRequests);
+    }
+
+    pub fn request_public_session_requests(&mut self) {
+        self.send(ClientMessage::PublicSessionRequests);
     }
 
     pub fn request_private_user_info(&mut self) {

@@ -2,7 +2,10 @@ use crate::websocket::connection::ConnectionId;
 use checkmade_core::data::service::Services;
 use checkmade_core::data::store::Store;
 use checkmade_core::data::Data;
+use checkmade_core::game::play_move::PlayMove;
+use checkmade_core::game::play_session::PlaySession;
 use checkmade_core::messages::server::ServerMessage;
+use checkmade_core::types::session_id::SessionId;
 use checkmade_core::types::user_info::PublicUserInfo;
 use dashmap::DashMap;
 use futures_util::TryStreamExt;
@@ -16,12 +19,14 @@ use uuid::Uuid;
 mod connection;
 pub mod handler;
 mod rate_limiter;
+mod subscriptions;
 
 pub struct Websocket {
     connections: DashMap<ConnectionId, (Uuid, mpsc::Sender<ServerMessage>)>,
     users: DashMap<Uuid, HashSet<ConnectionId>>,
     data: Arc<Data>,
     service: Arc<Services>,
+    subscriptions: subscriptions::Subscriptions,
 }
 
 impl Websocket {
@@ -31,6 +36,7 @@ impl Websocket {
             users: DashMap::new(),
             data: Arc::clone(data),
             service: Arc::clone(service),
+            subscriptions: subscriptions::Subscriptions::new(),
         }
     }
 
@@ -73,6 +79,7 @@ impl Websocket {
             let Some(mut entry) = self.users.get_mut(&user_id) else {
                 return;
             };
+            self.subscriptions.unsubscribe_all(connection_id);
             entry.remove(&connection_id);
             entry.is_empty()
         };
@@ -122,6 +129,31 @@ impl Websocket {
 
     pub fn connection_user_id(&self, connection_id: ConnectionId) -> Option<Uuid> {
         self.connections.get(&connection_id).map(|c| c.0)
+    }
+
+    pub fn subscribe_to_session(&self, connection_id: ConnectionId, session_id: Uuid) {
+        self.subscriptions
+            .subscribe(connection_id, session_id.into());
+    }
+
+    pub fn unsubscribe_from_session(&self, connection_id: ConnectionId, session_id: Uuid) {
+        self.subscriptions
+            .unsubscribe(connection_id, session_id.into());
+    }
+
+    pub fn broadcast_session(&self, session_id: Uuid, mv: PlayMove) {
+        self.subscriptions
+            .with_subscribers(&session_id, |subscribers| {
+                for conn in subscribers {
+                    self.send_to_connection(
+                        *conn,
+                        ServerMessage::SessionUpdate {
+                            session_id: session_id.into(),
+                            mv: mv.clone(),
+                        },
+                    );
+                }
+            });
     }
 }
 

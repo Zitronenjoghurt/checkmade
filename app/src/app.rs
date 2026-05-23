@@ -106,6 +106,11 @@ impl Checkmade {
 impl Checkmade {
     pub fn handle_message(&mut self, msg: ServerMessage) {
         match msg {
+            ServerMessage::ActiveSessions(sessions) => {
+                self.store
+                    .active_sessions
+                    .set_value(sessions.into_iter().map(|s| (s.id, s)).collect());
+            }
             ServerMessage::Error(err) => {
                 self.toasts.error(err);
             }
@@ -149,9 +154,19 @@ impl Checkmade {
                 let map = requests.into_iter().map(|r| (r.user_id, r.since)).collect();
                 self.store.incoming_friend_requests.set_value(map);
             }
+            ServerMessage::IncomingSessionRequests(requests) => {
+                self.store
+                    .incoming_session_requests
+                    .set_value(requests.into_iter().map(|r| (r.id, r)).collect());
+            }
             ServerMessage::OutgoingFriendRequests(requests) => {
                 let map = requests.into_iter().map(|r| (r.user_id, r.since)).collect();
                 self.store.outgoing_friend_requests.set_value(map);
+            }
+            ServerMessage::OutgoingSessionRequests(requests) => {
+                self.store
+                    .outgoing_session_requests
+                    .set_value(requests.into_iter().map(|r| (r.id, r)).collect());
             }
             ServerMessage::Pong {
                 client_time,
@@ -160,7 +175,61 @@ impl Checkmade {
                 self.server_time.handle_pong(client_time, server_time);
             }
             ServerMessage::PrivateUserInfo(info) => self.store.me.set_value(info),
+            ServerMessage::PublicSessionRequests(requests) => {
+                self.store
+                    .public_session_requests
+                    .set_value(requests.into_iter().map(|r| (r.id, r)).collect());
+            }
             ServerMessage::PublicUserInfo(info) => self.store.users.set(info.id, info),
+            ServerMessage::Session(session) => {
+                if let Some(me) = &self.store.me.value {
+                    if me.public.id == session.white || me.public.id == session.black {
+                        self.store.active_sessions.insert(session.id, session);
+                    } else {
+                        self.store.passive_sessions.insert(session.id, session);
+                    }
+                }
+            }
+            ServerMessage::SessionStart(session) => {
+                self.store.active_sessions.insert(session.id, session);
+            }
+            ServerMessage::SessionRequest(request) => {
+                if let Some(me) = &self.store.me.value {
+                    if request.requester_id == me.public.id {
+                        self.store
+                            .outgoing_session_requests
+                            .insert(request.id, request);
+                    } else if let Some(opponent_id) = request.opponent_id
+                        && opponent_id == me.public.id
+                    {
+                        self.store
+                            .incoming_session_requests
+                            .insert(request.id, request);
+                    } else {
+                        self.store
+                            .public_session_requests
+                            .insert(request.id, request);
+                    }
+                }
+            }
+            ServerMessage::SessionRequestCreateOk(request) => {
+                self.store.outgoing_session_requests.remove(&request.id);
+            }
+            ServerMessage::SessionRequestDeclinedByPeer(id) => {
+                self.store.outgoing_session_requests.remove(&id);
+            }
+            ServerMessage::SessionRequestDeclineOk(id) => {
+                self.store.incoming_session_requests.remove(&id);
+            }
+            ServerMessage::SessionRequestIncoming(request) => {
+                self.store
+                    .incoming_session_requests
+                    .insert(request.id, request);
+            }
+            ServerMessage::SessionUpdate { session_id, mv } => {
+                // ToDo: Wire to board state, etc.
+                todo!()
+            }
         }
     }
 }

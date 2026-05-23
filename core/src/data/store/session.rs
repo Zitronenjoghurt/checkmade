@@ -2,9 +2,13 @@ use crate::config::CoreConfig;
 use crate::data::entity::{session, session_request};
 use crate::data::store::{Paginate, Store};
 use crate::error::{CoreResult, DomainError};
-use crate::game::play_session::PlaySessionKind;
+use crate::game::play_move::PlayMove;
+use crate::game::play_session::{PlaySession, PlaySessionKind};
 use crate::game::session_data::{SessionConfigData, SessionData};
-use sea_orm::{ActiveModelTrait, ColumnTrait, ConnectionTrait, ModelTrait, Set, TransactionTrait};
+use giga_chess::prelude::Color;
+use sea_orm::{
+    ActiveModelTrait, ColumnTrait, ConnectionTrait, EntityTrait, ModelTrait, Set, TransactionTrait,
+};
 use sea_orm::{Condition, DatabaseConnection};
 use std::sync::Arc;
 use uuid::Uuid;
@@ -70,12 +74,21 @@ impl SessionStore {
         .await
     }
 
-    pub async fn create(
-        &self,
-        opponent_id: Uuid,
-        request: session_request::Model,
-    ) -> CoreResult<session::Model> {
+    pub async fn create(&self, opponent_id: Uuid, request_id: Uuid) -> CoreResult<session::Model> {
         let txn = self.connection.begin().await?;
+        let Some(request) = session_request::Entity::find_by_id(request_id)
+            .one(&txn)
+            .await?
+        else {
+            return Err(DomainError::SessionRequestNotFound.into());
+        };
+
+        if let Some(addressee_id) = request.addressee_id
+            && addressee_id != opponent_id
+        {
+            return Err(DomainError::SessionRequestNotFound.into());
+        }
+
         let requester_count = Self::count_by_user(&txn, request.requester_id).await?;
         if requester_count >= self.config.session_limit {
             return Err(DomainError::SessionLimitReached(self.config.session_limit).into());
@@ -109,5 +122,35 @@ impl SessionStore {
         let created = model.insert(&txn).await?;
         txn.commit().await?;
         Ok(created)
+    }
+
+    pub async fn play(
+        &self,
+        player_id: Uuid,
+        session_id: Uuid,
+        play_move: PlayMove,
+        server_time: u64,
+    ) -> CoreResult<()> {
+        let txn = self.connection.begin().await?;
+        let model = session::Entity::find_by_id(session_id)
+            .one(&txn)
+            .await?
+            .ok_or(DomainError::SessionNotFound)?;
+        let mut session: PlaySession = model.try_into()?;
+
+        let color = if session.white == player_id.into() {
+            Color::White
+        } else if session.black == player_id.into() {
+            Color::Black
+        } else {
+            return Err(DomainError::NotSessionParticipant.into());
+        };
+
+        session.play(color, play_move, server_time)?;
+
+        let to_save: session::ActiveModel = session.try_into()?;
+        to_save.update(&txn).await?;
+        txn.commit().await?;
+        Ok(())
     }
 }

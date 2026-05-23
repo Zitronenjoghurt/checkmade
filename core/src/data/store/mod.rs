@@ -6,7 +6,7 @@ use sea_orm::*;
 
 pub mod friendship;
 pub mod session;
-mod session_request;
+pub mod session_request;
 pub mod user;
 
 #[async_trait::async_trait]

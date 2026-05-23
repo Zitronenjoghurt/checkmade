@@ -19,6 +19,7 @@ pub struct Data {
     connection: DatabaseConnection,
     pub friends: store::friendship::FriendshipStore,
     pub session: store::session::SessionStore,
+    pub session_request: store::session_request::SessionRequestStore,
     pub user: store::user::UserStore,
 }
 
@@ -36,6 +37,7 @@ impl Data {
         let data = Self {
             friends: store::friendship::FriendshipStore::new(config, &connection),
             session: store::session::SessionStore::new(config, &connection),
+            session_request: store::session_request::SessionRequestStore::new(config, &connection),
             user: store::user::UserStore::new(&connection),
             config: Arc::clone(config),
             connection,

@@ -1,25 +1,38 @@
 use crate::event::{AppEvent, ReconnectedEvent};
 use crate::ws::cache::FetchableCache;
 use crate::ws::fetchable::Fetchable;
+use checkmade_core::game::play_session::PlaySession;
+use checkmade_core::types::session_id::SessionId;
+use checkmade_core::types::session_request::{SessionRequest, SessionRequestId};
 use checkmade_core::types::user_id::UserId;
 use checkmade_core::types::user_info::{PrivateUserInfo, PublicUserInfo};
 use std::collections::HashMap;
 
 pub struct Store {
+    pub active_sessions: Fetchable<HashMap<SessionId, PlaySession>>,
     pub friends: Fetchable<HashMap<UserId, u64>>,
     pub incoming_friend_requests: Fetchable<HashMap<UserId, u64>>,
+    pub incoming_session_requests: Fetchable<HashMap<SessionRequestId, SessionRequest>>,
     pub me: Fetchable<PrivateUserInfo>,
     pub outgoing_friend_requests: Fetchable<HashMap<UserId, u64>>,
+    pub outgoing_session_requests: Fetchable<HashMap<SessionRequestId, SessionRequest>>,
+    pub passive_sessions: Fetchable<HashMap<SessionId, PlaySession>>,
+    pub public_session_requests: Fetchable<HashMap<SessionRequestId, SessionRequest>>,
     pub users: FetchableCache<UserId, PublicUserInfo>,
 }
 
 impl Default for Store {
     fn default() -> Self {
         Self {
+            active_sessions: Fetchable::new(),
             friends: Fetchable::new(),
             incoming_friend_requests: Fetchable::new(),
+            incoming_session_requests: Fetchable::new(),
             me: Fetchable::new(),
             outgoing_friend_requests: Fetchable::new(),
+            outgoing_session_requests: Fetchable::new(),
+            passive_sessions: Fetchable::new(),
+            public_session_requests: Fetchable::new(),
             users: FetchableCache::new().with_fetch_cooldown(web_time::Duration::from_millis(200)),
         }
     }
@@ -31,20 +44,33 @@ impl Store {
             self.invalidate();
         }
 
+        self.active_sessions
+            .request_if_needed(|| ws.request_active_sessions());
         self.friends.request_if_needed(|| ws.request_friends());
         self.incoming_friend_requests
             .request_if_needed(|| ws.request_incoming_friend_requests());
+        self.incoming_session_requests
+            .request_if_needed(|| ws.request_incoming_session_requests());
         self.me.request_if_needed(|| ws.request_private_user_info());
         self.outgoing_friend_requests
             .request_if_needed(|| ws.request_outgoing_friend_requests());
+        self.outgoing_session_requests
+            .request_if_needed(|| ws.request_outgoing_session_requests());
+        self.public_session_requests
+            .request_if_needed(|| ws.request_public_session_requests());
         self.users.update(|id| ws.request_public_user_info(id));
     }
 
     fn invalidate(&mut self) {
+        self.active_sessions.invalidate();
         self.friends.invalidate();
         self.incoming_friend_requests.invalidate();
-        self.outgoing_friend_requests.invalidate();
+        self.incoming_session_requests.invalidate();
         self.me.invalidate();
+        self.outgoing_friend_requests.invalidate();
+        self.outgoing_session_requests.invalidate();
+        self.passive_sessions.invalidate();
+        self.public_session_requests.invalidate();
         self.users.invalidate();
     }
 

@@ -1,3 +1,5 @@
+use giga_chess::error::SessionError;
+
 pub type CoreResult<T> = Result<T, CoreError>;
 
 #[derive(Debug, thiserror::Error)]
@@ -58,16 +60,26 @@ pub enum DomainError {
     FriendRequestLimitReached(u64),
     #[error("This friend code is invalid.")]
     InvalidFriendCode,
+    #[error("This move is invalid.")]
+    InvalidMove,
     #[error("You have no friend request from this user.")]
     NoFriendRequest,
     #[error("You are not friends with this user.")]
     NotFriends,
+    #[error("You are not a participant in this session.")]
+    NotSessionParticipant,
+    #[error("Session error: {0}")]
+    Session(#[from] SessionError),
     #[error(
         "You or your opponent have reached their session limit (max {0}) and cannot create any more sessions."
     )]
     SessionLimitReached(u64),
+    #[error("This session is invalid.")]
+    SessionNotFound,
     #[error(
         "You or your opponent have reached their session request limit (max {0}) and cannot create or receive any more session requests."
     )]
     SessionRequestLimitReached(u64),
+    #[error("This session request is invalid.")]
+    SessionRequestNotFound,
 }
