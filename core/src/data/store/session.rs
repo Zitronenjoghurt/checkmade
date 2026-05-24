@@ -131,7 +131,7 @@ impl SessionStore {
         session_id: Uuid,
         play_move: PlayMove,
         server_time: u64,
-    ) -> CoreResult<session::Model> {
+    ) -> CoreResult<(Color, session::Model)> {
         let txn = self.connection.begin().await?;
         let model = session::Entity::find_by_id(session_id)
             .one(&txn)
@@ -152,6 +152,6 @@ impl SessionStore {
         let to_save: session::ActiveModel = session.try_into()?;
         let model = to_save.update(&txn).await?;
         txn.commit().await?;
-        Ok(model)
+        Ok((color, model))
     }
 }

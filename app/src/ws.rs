@@ -5,9 +5,11 @@ use crate::utils::fmt::fmt_duration;
 use checkmade_core::lingo::Lingo::AttemptingReconnect;
 use checkmade_core::messages::client::ClientMessage;
 use checkmade_core::messages::server::ServerMessage;
+use checkmade_core::types::session_id::SessionId;
 use checkmade_core::types::session_request::{CreateSessionRequest, SessionRequestId};
 use checkmade_core::types::user_id::UserId;
 use ewebsock::{WsEvent, WsMessage, WsReceiver, WsSender};
+use log::debug;
 
 pub mod cache;
 pub mod fetchable;
@@ -134,6 +136,7 @@ impl Ws {
         if let Some(sender) = &mut self.sender {
             sender.send(WsMessage::Binary(msg.as_bytes()));
         }
+        debug!("Sent {}", msg.name());
     }
 
     fn schedule_reconnect(&mut self, ctx: &egui::Context) {
@@ -228,5 +231,17 @@ impl Ws {
 
     pub fn decline_session_request(&mut self, request_id: SessionRequestId) {
         self.send(ClientMessage::DeclineSessionRequest(request_id));
+    }
+
+    pub fn subscribe_session(&mut self, id: SessionId) {
+        self.send(ClientMessage::SubscribeSession(id));
+    }
+
+    pub fn unsubscribe_session(&mut self, id: SessionId) {
+        self.send(ClientMessage::UnsubscribeSession(id));
+    }
+
+    pub fn request_session(&mut self, id: SessionId) {
+        self.send(ClientMessage::Session(id));
     }
 }

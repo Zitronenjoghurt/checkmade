@@ -7,7 +7,8 @@ use crate::game::play_session::PlaySession;
 use crate::game::session_data::{SessionConfigData, SessionData};
 use crate::types::session_request::SessionRequest;
 use crate::types::session_status::SessionStatus;
-use sea_orm::Set;
+use sea_orm::sea_query::prelude::chrono;
+use sea_orm::{Set, Unchanged};
 use std::sync::Arc;
 use uuid::Uuid;
 
@@ -142,8 +143,17 @@ impl TryFrom<PlaySession> for session::ActiveModel {
         let status = value.status();
         let data: SessionData = value.kind.into();
         Ok(Self {
+            id: Unchanged(value.id.into()),
             status: Set(status as i16),
+            public: Unchanged(value.public),
+            white_id: Unchanged(value.white.into()),
+            black_id: Unchanged(value.black.into()),
             data: Set(data.to_bytes()?),
+            created_at: Unchanged(
+                chrono::DateTime::from_timestamp_millis(value.created as i64)
+                    .unwrap()
+                    .naive_utc(),
+            ),
             ..Default::default()
         })
     }

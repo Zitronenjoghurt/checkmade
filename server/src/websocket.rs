@@ -4,6 +4,7 @@ use checkmade_core::data::store::Store;
 use checkmade_core::data::Data;
 use checkmade_core::game::play_move::PlayMove;
 use checkmade_core::game::play_session::PlaySession;
+use checkmade_core::giga_chess::prelude::Color;
 use checkmade_core::messages::server::ServerMessage;
 use checkmade_core::types::session_id::SessionId;
 use checkmade_core::types::user_info::PublicUserInfo;
@@ -132,16 +133,14 @@ impl Websocket {
     }
 
     pub fn subscribe_to_session(&self, connection_id: ConnectionId, session_id: Uuid) {
-        self.subscriptions
-            .subscribe(connection_id, session_id.into());
+        self.subscriptions.subscribe(connection_id, session_id);
     }
 
     pub fn unsubscribe_from_session(&self, connection_id: ConnectionId, session_id: Uuid) {
-        self.subscriptions
-            .unsubscribe(connection_id, session_id.into());
+        self.subscriptions.unsubscribe(connection_id, session_id);
     }
 
-    pub fn broadcast_session(&self, session_id: Uuid, mv: PlayMove, updated_at: u64) {
+    pub fn broadcast_session(&self, session_id: Uuid, color: Color, mv: PlayMove, updated_at: u64) {
         self.subscriptions
             .with_subscribers(&session_id, |subscribers| {
                 for conn in subscribers {
@@ -149,6 +148,7 @@ impl Websocket {
                         *conn,
                         ServerMessage::SessionUpdate {
                             session_id: session_id.into(),
+                            color,
                             mv: mv.clone(),
                             at: updated_at,
                         },

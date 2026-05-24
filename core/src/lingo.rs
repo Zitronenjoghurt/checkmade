@@ -3,6 +3,7 @@ use strum::EnumIter;
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, EnumIter)]
 pub enum Lingo {
     AddFriend,
+    Arena,
     AttemptingReconnect,
     Cancel,
     Categories,

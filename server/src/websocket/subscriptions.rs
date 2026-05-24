@@ -16,7 +16,7 @@ impl Subscriptions {
         }
     }
 
-    pub fn subscribe(&self, session_id: Uuid, conn_id: ConnectionId) {
+    pub fn subscribe(&self, conn_id: ConnectionId, session_id: Uuid) {
         self.session_users
             .entry(session_id)
             .or_default()
@@ -27,7 +27,7 @@ impl Subscriptions {
             .insert(session_id);
     }
 
-    pub fn unsubscribe(&self, session_id: Uuid, conn_id: ConnectionId) {
+    pub fn unsubscribe(&self, conn_id: ConnectionId, session_id: Uuid) {
         if let Some(mut conns) = self.session_users.get_mut(&session_id) {
             conns.remove(&conn_id);
         }

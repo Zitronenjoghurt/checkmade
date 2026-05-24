@@ -1,6 +1,8 @@
 use crate::error::{CoreError, CoreResult, DomainError};
+use crate::game::play_event::PlayEvent;
 use crate::game::play_move::PlayMove;
 use crate::game::session_data::{SessionConfigData, SessionData};
+use crate::game::visuals::BoardVisuals;
 use crate::types::session_id::SessionId;
 use crate::types::session_status::SessionStatus;
 use crate::types::user_id::UserId;
@@ -20,18 +22,20 @@ pub struct PlaySession {
 }
 
 impl PlaySession {
-    pub fn play(&mut self, color: Color, mv: PlayMove, unix_ms: u64) -> CoreResult<()> {
-        match &mut self.kind {
+    pub fn play(&mut self, color: Color, mv: PlayMove, unix_ms: u64) -> CoreResult<PlayEvent> {
+        let event = match &mut self.kind {
             PlaySessionKind::Normal(session) => {
                 let PlayMove::Normal(action) = mv else {
                     return Err(DomainError::InvalidMove.into());
                 };
-                session
-                    .act(color, action, unix_ms)
-                    .map_err(DomainError::Session)?;
+                PlayEvent::Normal(
+                    session
+                        .act(color, action, unix_ms)
+                        .map_err(DomainError::Session)?,
+                )
             }
-        }
-        Ok(())
+        };
+        Ok(event)
     }
 
     pub fn can_move(&self, user_id: UserId) -> bool {
@@ -75,6 +79,20 @@ impl PlaySession {
                     }
                 },
             },
+        }
+    }
+
+    pub fn visuals(&self, user_id: UserId, color: Color) -> BoardVisuals {
+        match &self.kind {
+            PlaySessionKind::Normal(session) => {
+                if user_id == self.white {
+                    BoardVisuals::from_game(Color::White, session.game())
+                } else if user_id == self.black {
+                    BoardVisuals::from_game(Color::Black, session.game())
+                } else {
+                    BoardVisuals::from_game(color, session.game())
+                }
+            }
         }
     }
 }

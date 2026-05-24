@@ -4,6 +4,7 @@ use crate::i18n::Translatable;
 use crate::server_time::ServerTime;
 use crate::store::Store;
 use crate::ui::icons;
+use crate::ui::state::arena::ArenaSource;
 use crate::ui::state::UiState;
 use crate::ui::tabs::{Tab, TabViewer};
 use crate::ui::widgets::connection_status::ConnectionStatus;
@@ -12,11 +13,13 @@ use crate::ui::widgets::profile_menu::ProfileMenu;
 use crate::ui::widgets::with_badge::WithBadge;
 use crate::utils::images::Images;
 use crate::ws::Ws;
+use checkmade_core::game::play_event::PlayEvent;
 use checkmade_core::lingo::Lingo::*;
 use checkmade_core::messages::server::ServerMessage;
 use egui::{CentralPanel, Panel, Widget};
 use egui_dock::DockState;
 use egui_notify::Toasts;
+use log::debug;
 
 #[derive(serde::Serialize, serde::Deserialize)]
 pub struct Checkmade {
@@ -74,6 +77,7 @@ impl Checkmade {
 
 impl eframe::App for Checkmade {
     fn ui(&mut self, ui: &mut egui::Ui, _frame: &mut eframe::Frame) {
+        self.update_arena();
         self.handle_events(ui.ctx());
         self.http.update(&mut self.toasts);
         self.update_ws(ui);
@@ -105,6 +109,7 @@ impl Checkmade {
 // Message handlers
 impl Checkmade {
     pub fn handle_message(&mut self, msg: ServerMessage) {
+        debug!("Received {}", msg.name());
         match msg {
             ServerMessage::ActiveSessions(sessions) => {
                 self.store
@@ -242,9 +247,22 @@ impl Checkmade {
             ServerMessage::SessionRequestRemovedByPeer(id) => {
                 self.store.incoming_session_requests.remove(&id);
             }
-            ServerMessage::SessionUpdate { session_id, mv, at } => {
-                // ToDo: Wire to board state, etc.
-                todo!()
+            ServerMessage::SessionUpdate {
+                session_id,
+                color,
+                mv,
+                at,
+            } => {
+                let Some(session) = self.store.active_sessions.get_entry_mut(&session_id) else {
+                    self.ws.request_session(session_id);
+                    return;
+                };
+                let Ok(event) = session.play(color, mv, at) else {
+                    self.ws.request_session(session_id);
+                    return;
+                };
+                session.updated = at;
+                self.handle_play_event(event);
             }
         }
     }
@@ -316,10 +334,10 @@ impl Checkmade {
 
                 if ui
                     .button(icons::CHECKERBOARD)
-                    .on_hover_text(Sandbox.t())
+                    .on_hover_text(Arena.t())
                     .clicked()
                 {
-                    self.open_tab(Tab::Sandbox);
+                    self.open_tab(Tab::Arena);
                 }
 
                 ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
@@ -361,6 +379,47 @@ impl Checkmade {
 
         if ReconnectedEvent::fired(ctx) {
             self.toasts.success(ConnectionEstablished.t());
+            if let Some(session_id) = self.ui.arena.session_id() {
+                self.ws.subscribe_session(session_id);
+            }
         }
+
+        for OpenSessionEvent(id) in OpenSessionEvent::recv(ctx) {
+            if let Some(old_id) = self.ui.arena.session_id() {
+                if old_id != id {
+                    self.ui.arena.source = ArenaSource::Active(id);
+                }
+            } else {
+                self.ui.arena.source = ArenaSource::Active(id);
+            }
+            self.open_tab(Tab::Arena);
+        }
+    }
+}
+
+// Play shenanigans
+impl Checkmade {
+    fn update_arena(&mut self) {
+        let Some(current_id) = self.ui.arena.session_id() else {
+            if let Some(old_id) = self.ui.arena.subscribed_session {
+                self.ws.unsubscribe_session(old_id);
+                self.ui.arena.subscribed_session = None;
+            }
+            return;
+        };
+
+        if let Some(old_id) = self.ui.arena.subscribed_session {
+            if old_id != current_id {
+                self.ws.unsubscribe_session(old_id);
+                self.ws.subscribe_session(current_id);
+            }
+        } else {
+            self.ws.subscribe_session(current_id);
+        }
+        self.ui.arena.subscribed_session = Some(current_id);
+    }
+
+    fn handle_play_event(&mut self, event: PlayEvent) {
+        // ToDo:
     }
 }

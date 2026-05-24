@@ -6,6 +6,7 @@ use crate::types::session_id::SessionId;
 use crate::types::session_request::{SessionRequest, SessionRequestId};
 use crate::types::user_id::UserId;
 use crate::types::user_info::{PrivateUserInfo, PublicUserInfo};
+use giga_chess::prelude::Color;
 
 #[derive(Clone)]
 #[cfg_attr(feature = "bitcode", derive(bitcode::Encode, bitcode::Decode))]
@@ -44,6 +45,7 @@ pub enum ServerMessage {
     SessionRequestRemovedByPeer(SessionRequestId),
     SessionUpdate {
         session_id: SessionId,
+        color: Color,
         mv: PlayMove,
         at: u64,
     },

@@ -97,6 +97,10 @@ impl<K: Eq + Hash, V> Fetchable<HashMap<K, V>> {
         self.value.as_ref().and_then(|m| m.get(key))
     }
 
+    pub fn get_entry_mut(&mut self, key: &K) -> Option<&mut V> {
+        self.value.as_mut().and_then(|m| m.get_mut(key))
+    }
+
     pub fn contains_key(&self, key: &K) -> bool {
         self.value.as_ref().is_some_and(|m| m.contains_key(key))
     }

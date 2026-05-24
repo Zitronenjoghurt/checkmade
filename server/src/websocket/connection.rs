@@ -457,17 +457,16 @@ impl WebsocketConnection {
     }
 
     async fn handle_play_move(&self, session_id: Uuid, mv: PlayMove) -> ServerResult<()> {
-        let model = self
+        let play_time = server_time_ms();
+        let (color, _) = self
             .state
             .data
             .session
-            .play(self.user_id, session_id, mv.clone(), server_time_ms())
+            .play(self.user_id, session_id, mv.clone(), play_time)
             .await?;
-        self.state.ws.broadcast_session(
-            session_id,
-            mv,
-            model.updated_at.and_utc().timestamp_millis() as u64,
-        );
+        self.state
+            .ws
+            .broadcast_session(session_id, color, mv, play_time);
         Ok(())
     }
 

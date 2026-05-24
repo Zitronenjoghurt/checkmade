@@ -3,9 +3,9 @@ use checkmade_core::lingo::Lingo::*;
 use egui::{Ui, WidgetText};
 use strum::EnumIter;
 
+mod arena;
 mod friends;
 mod games;
-mod sandbox;
 mod settings;
 
 pub struct TabViewer<'a> {
@@ -26,9 +26,9 @@ impl<'a> egui_dock::TabViewer for TabViewer<'a> {
 
     fn ui(&mut self, ui: &mut Ui, tab: &mut Self::Tab) {
         match tab {
+            Tab::Arena => arena::show(self, ui),
             Tab::Friends => friends::show(self, ui),
             Tab::Games => games::show(self, ui),
-            Tab::Sandbox => sandbox::show(self, ui),
             Tab::Settings => settings::show(self, ui),
         }
     }
@@ -44,18 +44,18 @@ impl<'a> egui_dock::TabViewer for TabViewer<'a> {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize, EnumIter)]
 pub enum Tab {
+    Arena,
     Friends,
     Games,
-    Sandbox,
     Settings,
 }
 
 impl Tab {
     pub fn title(&self) -> String {
         match self {
+            Tab::Arena => Arena.t().to_string(),
             Tab::Friends => Friends.t().to_string(),
             Tab::Games => Games.t().to_string(),
-            Tab::Sandbox => Sandbox.t().to_string(),
             Tab::Settings => Settings.t().to_string(),
         }
     }
