@@ -5,26 +5,33 @@ use std::hash::Hash;
 
 pub struct GenericMultiSelect<'a, T, V>
 where
-    T: Eq + Hash + Copy + Display,
+    T: Eq + Hash + Copy,
     V: IntoIterator<Item = T>,
 {
     selected: &'a mut HashSet<T>,
     variants: V,
     label: Option<&'a str>,
     id: &'a str,
+    fmt: Box<dyn Fn(T) -> String + 'a>,
 }
 
 impl<'a, T, V> GenericMultiSelect<'a, T, V>
 where
-    T: Eq + Hash + Copy + Display,
+    T: Eq + Hash + Copy,
     V: IntoIterator<Item = T>,
 {
-    pub fn new(selected: &'a mut HashSet<T>, variants: V, id: &'a str) -> Self {
+    pub fn new(
+        selected: &'a mut HashSet<T>,
+        variants: V,
+        id: &'a str,
+        fmt: impl Fn(T) -> String + 'a,
+    ) -> Self {
         Self {
             selected,
             variants,
             label: None,
             id,
+            fmt: Box::new(fmt),
         }
     }
 
@@ -34,18 +41,41 @@ where
     }
 }
 
+impl<'a, T, V> GenericMultiSelect<'a, T, V>
+where
+    T: Eq + Hash + Copy + Display,
+    V: IntoIterator<Item = T>,
+{
+    pub fn new_display(selected: &'a mut HashSet<T>, variants: V, id: &'a str) -> Self {
+        Self::new(selected, variants, id, |v| v.to_string())
+    }
+}
+
 impl<'a, T> GenericMultiSelect<'a, T, <T as strum::IntoEnumIterator>::Iterator>
 where
     T: strum::IntoEnumIterator + Eq + Hash + Copy + Display,
 {
     pub fn from_enum(selected: &'a mut HashSet<T>, id: &'a str) -> Self {
-        Self::new(selected, T::iter(), id)
+        Self::new_display(selected, T::iter(), id)
+    }
+}
+
+impl<'a, T> GenericMultiSelect<'a, T, <T as strum::IntoEnumIterator>::Iterator>
+where
+    T: strum::IntoEnumIterator + Eq + Hash + Copy,
+{
+    pub fn from_enum_with(
+        selected: &'a mut HashSet<T>,
+        id: &'a str,
+        fmt: impl Fn(T) -> String + 'a,
+    ) -> Self {
+        Self::new(selected, T::iter(), id, fmt)
     }
 }
 
 impl<T, V> Widget for GenericMultiSelect<'_, T, V>
 where
-    T: Eq + Hash + Copy + Display,
+    T: Eq + Hash + Copy,
     V: IntoIterator<Item = T>,
 {
     fn ui(self, ui: &mut Ui) -> egui::Response {
@@ -63,7 +93,7 @@ where
             .show_ui(ui, |ui| {
                 for variant in self.variants {
                     let mut is_selected = self.selected.contains(&variant);
-                    if ui.checkbox(&mut is_selected, variant.to_string()).changed() {
+                    if ui.checkbox(&mut is_selected, (self.fmt)(variant)).changed() {
                         if is_selected {
                             self.selected.insert(variant);
                         } else {

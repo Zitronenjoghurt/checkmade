@@ -5,6 +5,7 @@ use crate::error::{CoreResult, DomainError};
 use crate::game::play_move::PlayMove;
 use crate::game::play_session::{PlaySession, PlaySessionKind};
 use crate::game::session_data::{SessionConfigData, SessionData};
+use crate::types::session_status::SessionStatus;
 use giga_chess::prelude::Color;
 use sea_orm::{
     ActiveModelTrait, ColumnTrait, ConnectionTrait, EntityTrait, ModelTrait, Set, TransactionTrait,
@@ -38,7 +39,7 @@ impl SessionStore {
     pub fn paginate_by_user(
         &self,
         id: Uuid,
-        active: Option<bool>,
+        status: Option<SessionStatus>,
         page_size: u64,
     ) -> Paginate<'_, session::Entity> {
         let mut filter = Condition::all().add(
@@ -46,20 +47,20 @@ impl SessionStore {
                 .add(session::Column::WhiteId.eq(id))
                 .add(session::Column::BlackId.eq(id)),
         );
-        if let Some(active) = active {
-            filter = filter.add(session::Column::Active.eq(active));
+        if let Some(status) = status {
+            filter = filter.add(session::Column::Status.eq(status as i16));
         };
         self.paginate().filter(filter).page_size(page_size)
     }
 
     pub fn paginate_public(
         &self,
-        active: Option<bool>,
+        status: Option<SessionStatus>,
         page_size: u64,
     ) -> Paginate<'_, session::Entity> {
         let mut filter = Condition::all().add(session::Column::Public.eq(true));
-        if let Some(active) = active {
-            filter = filter.add(session::Column::Active.eq(active));
+        if let Some(status) = status {
+            filter = filter.add(session::Column::Status.eq(status as i16));
         };
         self.paginate().filter(filter).page_size(page_size)
     }
@@ -130,7 +131,7 @@ impl SessionStore {
         session_id: Uuid,
         play_move: PlayMove,
         server_time: u64,
-    ) -> CoreResult<()> {
+    ) -> CoreResult<session::Model> {
         let txn = self.connection.begin().await?;
         let model = session::Entity::find_by_id(session_id)
             .one(&txn)
@@ -149,8 +150,8 @@ impl SessionStore {
         session.play(color, play_move, server_time)?;
 
         let to_save: session::ActiveModel = session.try_into()?;
-        to_save.update(&txn).await?;
+        let model = to_save.update(&txn).await?;
         txn.commit().await?;
-        Ok(())
+        Ok(model)
     }
 }

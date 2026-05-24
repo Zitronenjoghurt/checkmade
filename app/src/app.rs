@@ -118,7 +118,6 @@ impl Checkmade {
                 self.store
                     .incoming_friend_requests
                     .insert(info.user_id, info.since);
-                self.toasts.info(FriendRequestReceived.t());
             }
             ServerMessage::FriendRequestDeclinedByPeer(id) => {
                 self.store.outgoing_friend_requests.remove(&id);
@@ -141,6 +140,12 @@ impl Checkmade {
             ServerMessage::FriendRequestDeclineOk(id) => {
                 self.store.incoming_friend_requests.remove(&id);
                 self.toasts.success(FriendRequestDeclined.t());
+            }
+            ServerMessage::FriendRequestRemoveOk(id) => {
+                self.store.outgoing_friend_requests.remove(&id);
+            }
+            ServerMessage::FriendRequestRemovedByPeer(id) => {
+                self.store.incoming_friend_requests.remove(&id);
             }
             ServerMessage::FriendRemoveOk(id) => {
                 self.store.friends.remove(&id);
@@ -213,20 +218,31 @@ impl Checkmade {
                 }
             }
             ServerMessage::SessionRequestCreateOk(request) => {
-                self.store.outgoing_session_requests.remove(&request.id);
+                self.store
+                    .outgoing_session_requests
+                    .insert(request.id, request);
+                self.toasts.success(SessionRequestCreated.t());
             }
             ServerMessage::SessionRequestDeclinedByPeer(id) => {
                 self.store.outgoing_session_requests.remove(&id);
             }
             ServerMessage::SessionRequestDeclineOk(id) => {
                 self.store.incoming_session_requests.remove(&id);
+                self.toasts.success(SessionRequestDeclined.t());
             }
             ServerMessage::SessionRequestIncoming(request) => {
                 self.store
                     .incoming_session_requests
                     .insert(request.id, request);
+                self.toasts.info(SessionRequestReceived.t());
             }
-            ServerMessage::SessionUpdate { session_id, mv } => {
+            ServerMessage::SessionRequestRemoveOk(id) => {
+                self.store.outgoing_session_requests.remove(&id);
+            }
+            ServerMessage::SessionRequestRemovedByPeer(id) => {
+                self.store.incoming_session_requests.remove(&id);
+            }
+            ServerMessage::SessionUpdate { session_id, mv, at } => {
                 // ToDo: Wire to board state, etc.
                 todo!()
             }
@@ -285,6 +301,18 @@ impl Checkmade {
                 }
 
                 ui.separator();
+
+                let resp = ui
+                    .add(
+                        WithBadge::new(egui::Button::new(icons::GAME_CONTROLLER)).dot(
+                            self.store.game_request_count() > 0
+                                || self.store.active_sessions_to_move_count() > 0,
+                        ),
+                    )
+                    .on_hover_text(Games.t());
+                if resp.clicked() {
+                    self.open_tab(Tab::Games);
+                }
 
                 if ui
                     .button(icons::CHECKERBOARD)

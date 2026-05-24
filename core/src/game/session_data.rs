@@ -48,6 +48,12 @@ pub enum SessionConfigData {
     Normal(SessionConfig),
 }
 
+impl Default for SessionConfigData {
+    fn default() -> Self {
+        Self::Normal(SessionConfig::default())
+    }
+}
+
 impl SessionConfigData {
     #[cfg(all(feature = "rmp-serde", feature = "serde"))]
     pub fn from_bytes(raw: &[u8]) -> CoreResult<Self> {

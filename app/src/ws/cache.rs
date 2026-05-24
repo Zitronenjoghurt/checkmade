@@ -46,6 +46,10 @@ impl<K: Eq + Hash + Copy, V> FetchableCache<K, V> {
         self.entries.entry(key).or_default().value.as_ref()
     }
 
+    pub fn peek(&self, key: &K) -> Option<&V> {
+        self.entries.get(key).and_then(|f| f.value.as_ref())
+    }
+
     pub fn set(&mut self, key: K, value: V) {
         self.entries.entry(key).or_default().set_value(value);
     }

@@ -6,6 +6,7 @@ use crate::error::{CoreError, CoreResult};
 use crate::game::play_session::PlaySession;
 use crate::game::session_data::{SessionConfigData, SessionData};
 use crate::types::session_request::SessionRequest;
+use crate::types::session_status::SessionStatus;
 use sea_orm::Set;
 use std::sync::Arc;
 use uuid::Uuid;
@@ -33,14 +34,14 @@ impl SessionService {
     pub async fn user_page(
         &self,
         user_id: Uuid,
-        active: Option<bool>,
+        status: Option<SessionStatus>,
         page_size: u64,
         page: u64,
     ) -> CoreResult<Page<PlaySession>> {
         self.load_session_page(
             self.data
                 .session
-                .paginate_by_user(user_id, active, page_size)
+                .paginate_by_user(user_id, status, page_size)
                 .fetch_page(page)
                 .await?,
         )
@@ -48,14 +49,14 @@ impl SessionService {
 
     pub async fn public_page(
         &self,
-        active: Option<bool>,
+        status: Option<SessionStatus>,
         page_size: u64,
         page: u64,
     ) -> CoreResult<Page<PlaySession>> {
         self.load_session_page(
             self.data
                 .session
-                .paginate_public(active, page_size)
+                .paginate_public(status, page_size)
                 .fetch_page(page)
                 .await?,
         )
@@ -124,7 +125,6 @@ impl TryFrom<session::Model> for PlaySession {
         let data = SessionData::from_bytes(&model.data)?;
         Ok(Self {
             id: model.id.into(),
-            active: model.active,
             public: model.public,
             white: model.white_id.into(),
             black: model.black_id.into(),
@@ -139,10 +139,10 @@ impl TryFrom<PlaySession> for session::ActiveModel {
     type Error = CoreError;
 
     fn try_from(value: PlaySession) -> CoreResult<Self> {
-        let active = value.is_over();
+        let status = value.status();
         let data: SessionData = value.kind.into();
         Ok(Self {
-            active: Set(active),
+            status: Set(status as i16),
             data: Set(data.to_bytes()?),
             ..Default::default()
         })

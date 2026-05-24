@@ -2,10 +2,12 @@ add_friend: Add Friend
 attempting_reconnect: Attempting reconnect
 cancel: Cancel
 categories: Categories
+coming_soon: Coming soon
 connected: Connected
 connection_established: Connection established
 connection_lost: Connection lost
 copied_to_clipboard: Copied to clipboard
+create: Create
 disconnected: Disconnected
 fetching_user_info: Fetching user info
 friend_request_declined: Friend request declined
@@ -16,7 +18,11 @@ friends: Friends
 friends_since: Friends since
 friend_added: Friend added
 friend_code: Friend Code
+games: Games
+game_mode: Game mode
+game_mode_standard: Standard
 general: General
+last_turn: Last turn
 latency: Latency
 list: List
 logout: Logout
@@ -24,11 +30,26 @@ modal_remove_friend_title: Remove friend
 modal_remove_friend_body: 'Do you really want to remove %{x} from your friends list?'
 no_friends: No friends
 no_friend_requests: No friend requests
+no_ongoing_games: No ongoing games
+no_session_requests: No session requests
+ongoing_games: Ongoing games
+opponent: Opponent
 pending: Pending
+public: Public
+public_game_info: Public games can be joined and viewed by anyone.
+public_games: Public games
+public_requests: Public requests
 remove: Remove
 requests: Requests
 sandbox: Sandbox
 server_time: Server Time
+session_request_created: Session request created
+session_request_declined: Session request declined
+session_request_received: Session request received
 settings: Settings
+turn: Turn
+turns: Turns
 ui_scale: UI Scale
+waiting_for_opponent: Waiting for opponent
 x_ago: '%{x} ago'
+your_turn: It's your turn

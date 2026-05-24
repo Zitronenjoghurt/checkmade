@@ -12,7 +12,7 @@ impl MigrationTrait for Migration {
                     .table(Session::Table)
                     .if_not_exists()
                     .col(pk_uuid(Session::Id).default(Expr::cust("gen_random_uuid()")))
-                    .col(boolean(Session::Active).default(true))
+                    .col(small_integer(Session::Status).default(0))
                     .col(boolean(Session::Public).default(false))
                     .col(uuid(Session::WhiteId))
                     .col(uuid(Session::BlackId))
@@ -99,7 +99,7 @@ enum User {
 enum Session {
     Table,
     Id,
-    Active,
+    Status,
     Public,
     WhiteId,
     BlackId,

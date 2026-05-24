@@ -16,6 +16,8 @@ pub enum CoreError {
     Env(#[from] std::env::VarError),
     #[error("Invalid friendship status: {0}")]
     InvalidFriendshipStatus(i16),
+    #[error("Invalid session status: {0}")]
+    InvalidSessionStatus(i16),
     #[error("Parse int error: {0}")]
     ParseInt(#[from] std::num::ParseIntError),
     #[error("Parse float error: {0}")]
@@ -68,6 +70,8 @@ pub enum DomainError {
     NotFriends,
     #[error("You are not a participant in this session.")]
     NotSessionParticipant,
+    #[error("You cannot create a private session without specifying an opponent.")]
+    PrivateSessionsRequireOpponent,
     #[error("Session error: {0}")]
     Session(#[from] SessionError),
     #[error(

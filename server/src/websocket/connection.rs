@@ -11,6 +11,7 @@ use checkmade_core::messages::client::ClientMessage;
 use checkmade_core::messages::server::ServerMessage;
 use checkmade_core::types::friend_info::FriendInfo;
 use checkmade_core::types::session_request::{CreateSessionRequest, SessionRequest};
+use checkmade_core::types::session_status::SessionStatus;
 use futures_util::stream::SplitStream;
 use futures_util::StreamExt;
 use metrics::{counter, gauge};
@@ -193,6 +194,13 @@ impl WebsocketConnection {
             ClientMessage::RemoveFriend(target_id) => {
                 self.handle_remove_friend(target_id.into()).await
             }
+            ClientMessage::RemoveFriendRequest(target_id) => {
+                self.handle_remove_friend_request(target_id.into()).await
+            }
+            ClientMessage::RemoveSessionRequest(session_request_id) => {
+                self.handle_remove_session_request(session_request_id.into())
+                    .await
+            }
             ClientMessage::SendFriendRequest { friend_code } => {
                 self.handle_send_friend_request(&friend_code).await
             }
@@ -266,7 +274,7 @@ impl WebsocketConnection {
             .session
             .user_page(
                 self.user_id,
-                Some(true),
+                Some(SessionStatus::Ongoing),
                 self.state.config.core.session_limit,
                 0,
             )
@@ -280,7 +288,19 @@ impl WebsocketConnection {
         &self,
         request: CreateSessionRequest,
     ) -> ServerResult<()> {
-        let model = self.state.data.session_request.create(request).await?;
+        let opponent = request.opponent_id;
+        let model = self
+            .state
+            .data
+            .session_request
+            .create(self.user_id, request)
+            .await?;
+        if let Some(opponent) = opponent {
+            self.send_to_user(
+                opponent.into(),
+                ServerMessage::SessionRequestIncoming(model.clone().try_into()?),
+            )
+        }
         self.respond(ServerMessage::SessionRequestCreateOk(model.try_into()?));
         Ok(())
     }
@@ -437,12 +457,17 @@ impl WebsocketConnection {
     }
 
     async fn handle_play_move(&self, session_id: Uuid, mv: PlayMove) -> ServerResult<()> {
-        self.state
+        let model = self
+            .state
             .data
             .session
             .play(self.user_id, session_id, mv.clone(), server_time_ms())
             .await?;
-        self.state.ws.broadcast_session(session_id, mv);
+        self.state.ws.broadcast_session(
+            session_id,
+            mv,
+            model.updated_at.and_utc().timestamp_millis() as u64,
+        );
         Ok(())
     }
 
@@ -495,6 +520,37 @@ impl WebsocketConnection {
             ServerMessage::FriendshipRemovedByPeer(self.user_id.into()),
         );
 
+        Ok(())
+    }
+
+    async fn handle_remove_friend_request(&self, target_id: Uuid) -> ServerResult<()> {
+        self.state
+            .service
+            .friends
+            .remove_request(self.user_id, target_id)
+            .await?;
+        self.respond(ServerMessage::FriendRequestRemoveOk(target_id.into()));
+        self.send_to_user(
+            target_id,
+            ServerMessage::FriendRequestRemovedByPeer(self.user_id.into()),
+        );
+        Ok(())
+    }
+
+    async fn handle_remove_session_request(&self, request_id: Uuid) -> ServerResult<()> {
+        let opponent = self
+            .state
+            .data
+            .session_request
+            .remove(self.user_id, request_id)
+            .await?;
+        self.respond(ServerMessage::SessionRequestRemoveOk(request_id.into()));
+        if let Some(opponent) = opponent {
+            self.send_to_user(
+                opponent,
+                ServerMessage::SessionRequestRemovedByPeer(request_id.into()),
+            );
+        }
         Ok(())
     }
 

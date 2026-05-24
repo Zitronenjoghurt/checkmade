@@ -2,18 +2,29 @@ use crate::i18n::Translatable;
 use crate::server_time::ServerTime;
 use crate::store::Store;
 use crate::tl;
+use crate::ui::icons;
 use crate::utils::fmt::fmt_duration;
 use checkmade_core::lingo::Lingo::*;
-use egui::{Frame, Response, ScrollArea, Ui};
+use eframe::emath::Align;
+use egui::{Frame, Layout, Response, ScrollArea, Ui};
 
 pub struct FriendOutgoing<'a> {
     server_time: &'a ServerTime,
     store: &'a mut Store,
+    ws: &'a mut crate::ws::Ws,
 }
 
 impl<'a> FriendOutgoing<'a> {
-    pub fn new(server_time: &'a ServerTime, store: &'a mut Store) -> Self {
-        Self { server_time, store }
+    pub fn new(
+        server_time: &'a ServerTime,
+        store: &'a mut Store,
+        ws: &'a mut crate::ws::Ws,
+    ) -> Self {
+        Self {
+            server_time,
+            store,
+            ws,
+        }
     }
 }
 
@@ -39,6 +50,11 @@ impl egui::Widget for FriendOutgoing<'_> {
                                     ui.strong(&info.username);
                                     ui.separator();
                                     ui.small(tl!(XAgo, x = fmt_duration(elapsed)));
+                                    ui.with_layout(Layout::right_to_left(Align::Center), |ui| {
+                                        if ui.button(icons::TRASH).clicked() {
+                                            self.ws.remove_friend_request(info.id);
+                                        }
+                                    });
                                 });
                             } else {
                                 ui.spinner();

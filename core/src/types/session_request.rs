@@ -14,11 +14,10 @@ pub struct SessionRequest {
     pub created: u64,
 }
 
-#[derive(Clone)]
+#[derive(Default, Clone)]
 #[cfg_attr(feature = "bitcode", derive(bitcode::Encode, bitcode::Decode))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct CreateSessionRequest {
-    pub requester_id: UserId,
     pub opponent_id: Option<UserId>,
     pub config: SessionConfigData,
     pub public: bool,

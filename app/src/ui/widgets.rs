@@ -1,11 +1,16 @@
 pub mod board;
 pub mod connection_status;
 pub mod friends;
+pub mod games;
 pub mod generic_multi_select;
 pub mod generic_select;
 pub mod profile_menu;
 pub mod reset_slider;
 pub mod sandbox;
+pub mod session;
+mod session_config;
+mod session_config_data;
+mod session_request_create;
 pub mod settings;
 mod validated_input;
 pub mod with_badge;

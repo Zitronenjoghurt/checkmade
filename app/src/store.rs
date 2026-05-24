@@ -81,4 +81,23 @@ impl Store {
             .map(|v| v.len())
             .unwrap_or(0)
     }
+
+    pub fn game_request_count(&self) -> usize {
+        self.incoming_session_requests
+            .value
+            .as_ref()
+            .map(|v| v.len())
+            .unwrap_or(0)
+    }
+
+    pub fn active_sessions_to_move_count(&self) -> usize {
+        let Some(me) = self.me.value.as_ref() else {
+            return 0;
+        };
+        self.active_sessions
+            .value
+            .as_ref()
+            .map(|v| v.values().filter(|s| s.can_move(me.public.id)).count())
+            .unwrap_or(0)
+    }
 }

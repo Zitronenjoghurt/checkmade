@@ -141,7 +141,7 @@ impl Websocket {
             .unsubscribe(connection_id, session_id.into());
     }
 
-    pub fn broadcast_session(&self, session_id: Uuid, mv: PlayMove) {
+    pub fn broadcast_session(&self, session_id: Uuid, mv: PlayMove, updated_at: u64) {
         self.subscriptions
             .with_subscribers(&session_id, |subscribers| {
                 for conn in subscribers {
@@ -150,6 +150,7 @@ impl Websocket {
                         ServerMessage::SessionUpdate {
                             session_id: session_id.into(),
                             mv: mv.clone(),
+                            at: updated_at,
                         },
                     );
                 }

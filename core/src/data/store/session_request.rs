@@ -68,11 +68,16 @@ impl SessionRequestStore {
 
     pub async fn create(
         &self,
+        requester_id: Uuid,
         request: CreateSessionRequest,
     ) -> CoreResult<session_request::Model> {
         let txn = self.connection.begin().await?;
 
-        let outgoing = Self::count_outgoing(&txn, request.requester_id.into()).await?;
+        if !request.public && request.opponent_id.is_none() {
+            return Err(DomainError::PrivateSessionsRequireOpponent.into());
+        }
+
+        let outgoing = Self::count_outgoing(&txn, requester_id).await?;
         if outgoing >= self.config.session_request_limit {
             return Err(
                 DomainError::SessionRequestLimitReached(self.config.session_request_limit).into(),
@@ -90,7 +95,7 @@ impl SessionRequestStore {
         };
 
         let new = session_request::ActiveModel {
-            requester_id: Set(request.requester_id.into()),
+            requester_id: Set(requester_id),
             addressee_id: Set(request.opponent_id.map(Into::into)),
             config: Set(request.config.to_bytes()?),
             public: Set(request.public),
@@ -125,5 +130,23 @@ impl SessionRequestStore {
         request.delete(&txn).await?;
         txn.commit().await?;
         Ok(requester_id)
+    }
+
+    /// Returns the user id of the original addressee
+    pub async fn remove(&self, user_id: Uuid, request_id: Uuid) -> CoreResult<Option<Uuid>> {
+        let txn = self.connection.begin().await?;
+        let Some(request) = session_request::Entity::find_by_id(request_id)
+            .one(&txn)
+            .await?
+        else {
+            return Err(DomainError::SessionRequestNotFound.into());
+        };
+        if request.requester_id != user_id {
+            return Err(DomainError::SessionRequestNotFound.into());
+        };
+        let addressee_id = request.addressee_id;
+        request.delete(&txn).await?;
+        txn.commit().await?;
+        Ok(addressee_id)
     }
 }

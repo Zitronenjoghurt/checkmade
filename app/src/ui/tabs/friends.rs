@@ -24,7 +24,7 @@ pub fn show(v: &mut TabViewer, ui: &mut egui::Ui) {
                         FriendIncoming::new(v.server_time, v.store, v.ws).ui(ui);
                     }
                     FriendsTab::Outgoing => {
-                        FriendOutgoing::new(v.server_time, v.store).ui(ui);
+                        FriendOutgoing::new(v.server_time, v.store, v.ws).ui(ui);
                     }
                     FriendsTab::AddFriend => {
                         FriendAdd::new(v.store, v.toasts, v.ws).ui(ui);

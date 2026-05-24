@@ -2,15 +2,15 @@ use crate::error::{CoreError, CoreResult, DomainError};
 use crate::game::play_move::PlayMove;
 use crate::game::session_data::{SessionConfigData, SessionData};
 use crate::types::session_id::SessionId;
+use crate::types::session_status::SessionStatus;
 use crate::types::user_id::UserId;
-use giga_chess::prelude::{Color, Session};
+use giga_chess::prelude::{Color, GameOutcome, Session};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "bitcode", derive(bitcode::Encode, bitcode::Decode))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct PlaySession {
     pub id: SessionId,
-    pub active: bool,
     pub public: bool,
     pub white: UserId,
     pub black: UserId,
@@ -34,9 +34,47 @@ impl PlaySession {
         Ok(())
     }
 
-    pub fn is_over(&self) -> bool {
+    pub fn can_move(&self, user_id: UserId) -> bool {
+        if user_id != self.white && user_id != self.black {
+            return false;
+        };
+
         match &self.kind {
-            PlaySessionKind::Normal(session) => session.game().is_over(),
+            PlaySessionKind::Normal(session) => {
+                let color = session.game().position().side_to_move;
+                (color == Color::White && user_id == self.white)
+                    || (color == Color::Black && user_id == self.black)
+            }
+        }
+    }
+
+    pub fn move_count(&self) -> usize {
+        match &self.kind {
+            PlaySessionKind::Normal(session) => {
+                if session.game().position().side_to_move == Color::White {
+                    ((session.game().position().full_moves as usize) * 2) - 1
+                } else {
+                    (session.game().position().full_moves as usize) * 2
+                }
+            }
+        }
+    }
+
+    pub fn status(&self) -> SessionStatus {
+        match &self.kind {
+            PlaySessionKind::Normal(session) => match session.game().outcome() {
+                None => SessionStatus::Ongoing,
+                Some(outcome) => match outcome {
+                    GameOutcome::Draw(_) => SessionStatus::Draw,
+                    GameOutcome::Decisive { winner, .. } => {
+                        if winner == Color::White {
+                            SessionStatus::WhiteWins
+                        } else {
+                            SessionStatus::BlackWins
+                        }
+                    }
+                },
+            },
         }
     }
 }

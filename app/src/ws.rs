@@ -5,6 +5,7 @@ use crate::utils::fmt::fmt_duration;
 use checkmade_core::lingo::Lingo::AttemptingReconnect;
 use checkmade_core::messages::client::ClientMessage;
 use checkmade_core::messages::server::ServerMessage;
+use checkmade_core::types::session_request::{CreateSessionRequest, SessionRequestId};
 use checkmade_core::types::user_id::UserId;
 use ewebsock::{WsEvent, WsMessage, WsReceiver, WsSender};
 
@@ -207,5 +208,25 @@ impl Ws {
 
     pub fn remove_friend(&mut self, id: UserId) {
         self.send(ClientMessage::RemoveFriend(id));
+    }
+
+    pub fn remove_friend_request(&mut self, id: UserId) {
+        self.send(ClientMessage::RemoveFriendRequest(id));
+    }
+
+    pub fn remove_session_request(&mut self, id: SessionRequestId) {
+        self.send(ClientMessage::RemoveSessionRequest(id));
+    }
+
+    pub fn create_session_request(&mut self, request: CreateSessionRequest) {
+        self.send(ClientMessage::CreateSessionRequest(Box::new(request)));
+    }
+
+    pub fn accept_session_request(&mut self, request_id: SessionRequestId) {
+        self.send(ClientMessage::AcceptSessionRequest(request_id));
+    }
+
+    pub fn decline_session_request(&mut self, request_id: SessionRequestId) {
+        self.send(ClientMessage::DeclineSessionRequest(request_id));
     }
 }

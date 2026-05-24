@@ -2,10 +2,12 @@ add_friend: x
 attempting_reconnect: x
 cancel: x
 categories: x
+coming_soon: x
 connected: x
 connection_established: x
 connection_lost: x
 copied_to_clipboard: x
+create: x
 disconnected: x
 fetching_user_info: x
 friend_request_declined: x
@@ -16,7 +18,11 @@ friends: x
 friends_since: x
 friend_added: x
 friend_code: x
+games: x
+game_mode: x
+game_mode_standard: x
 general: x
+last_turn: x
 latency: x
 list: x
 logout: x
@@ -24,11 +30,26 @@ modal_remove_friend_title: x
 modal_remove_friend_body: 'Do you really want to remove %{x} from your friends list?'
 no_friends: x
 no_friend_requests: x
+no_ongoing_games: x
+no_session_requests: x
+ongoing_games: x
+opponent: x
 pending: x
+public: x
+public_game_info: x
+public_games: x
+public_requests: x
 remove: x
 requests: x
 sandbox: x
 server_time: x
+session_request_created: x
+session_request_declined: x
+session_request_received: x
 settings: x
+turn: x
+turns: x
 ui_scale: x
+waiting_for_opponent: x
 x_ago: '%{x} x'
+your_turn: x

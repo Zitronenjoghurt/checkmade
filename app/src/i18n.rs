@@ -1,3 +1,4 @@
+use checkmade_core::giga_chess::prelude::mode::GameMode;
 use checkmade_core::lingo::Lingo;
 use heck::ToSnakeCase;
 use serde::{Deserialize, Serialize};
@@ -84,6 +85,12 @@ impl Translatable for Lingo {
     }
 }
 
+impl Translatable for GameMode {
+    fn key(&self) -> String {
+        format!("game_mode_{:?}", self).to_snake_case()
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use crate::i18n::*;
@@ -104,6 +111,7 @@ mod tests {
 
     #[test]
     fn test_translations() {
+        assert_all_translated::<GameMode>();
         assert_all_translated::<Lingo>();
     }
 }

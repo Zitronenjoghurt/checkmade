@@ -5,5 +5,6 @@ pub mod identity_provider;
 pub mod permissions;
 pub mod session_id;
 pub mod session_request;
+pub mod session_status;
 pub mod user_id;
 pub mod user_info;

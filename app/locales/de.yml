@@ -2,10 +2,12 @@ add_friend: Freund hinzufügen
 attempting_reconnect: Verbindung wird wiederhergestellt
 cancel: Abbrechen
 categories: Kategorien
+coming_soon: Bald verfügbar
 connected: Verbunden
 connection_established: Verbindung hergestellt
 connection_lost: Verbindung verloren
 copied_to_clipboard: In die Zwischenablage kopiert
+create: Erstellen
 disconnected: Verbindung getrennt
 fetching_user_info: Lade Benutzerinfos
 friend_request_declined: Freundschaftsanfrage abgelehnt
@@ -16,7 +18,11 @@ friends: Freunde
 friends_since: Freunde seit
 friend_added: Freund hinzugefügt
 friend_code: Freundschaftscode
+games: Spiele
+game_mode: Spielmodus
+game_mode_standard: Standard
 general: Allgemein
+last_turn: Letzter Zug
 latency: Latenz
 list: Liste
 logout: Ausloggen
@@ -24,11 +30,26 @@ modal_remove_friend_title: Freund entfernen
 modal_remove_friend_body: 'Willst du %{x} wirklich als freund entfernen?'
 no_friends: Keine Freunde
 no_friend_requests: Keine Freundschaftsanfragen
+no_ongoing_games: Keine laufenden Spiele
+no_session_requests: Keine Sitzungsanfragen
+ongoing_games: Laufende Spiele
+opponent: Gegner
 pending: Ausstehend
+public: Öffentlich
+public_game_info: Öffentliche Spiele können von jedem Spieler beigetreten und angesehen werden.
+public_games: Öffentliche Spiele
+public_requests: Öffentliche Anfragen
 remove: Entfernen
 requests: Anfragen
 sandbox: Sandkasten
 server_time: Serverzeit
+session_request_created: Sitzungsanfrage erstellt
+session_request_declined: Sitzungsanfrage abgelehnt
+session_request_received: Sitzungsanfrage erhalten
 settings: Einstellungen
+turn: Zug
+turns: Züge
 ui_scale: UI Skalierung
+waiting_for_opponent: Warte auf Gegner
 x_ago: 'vor %{x}'
+your_turn: Du bist am Zug

@@ -34,7 +34,7 @@ impl Widget for SandboxWidget<'_> {
             if let Some(BoardAction::Move { from, to }) = board_action(ui, "sandbox_board")
                 && let Some(mv) = self.state.game.find_move(from, to, None)
             {
-                self.state.game.play_move(mv);
+                self.state.game.play_move(mv).unwrap();
             }
         })
         .response

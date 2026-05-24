@@ -9,7 +9,7 @@ bitcode = ["dep:bitcode", "giga-chess/bitcode"]
 serde = ["dep:serde", "giga-chess/serde"]
 
 [dependencies]
-giga-chess = { workspace = true }
+giga-chess = { workspace = true, features = ["strum"] }
 migration = { path = "migration", optional = true }
 async-trait = { version = "0.1.89", optional = true }
 bitcode = { workspace = true, optional = true }

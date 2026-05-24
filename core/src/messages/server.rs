@@ -18,13 +18,18 @@ pub enum ServerMessage {
     FriendshipRemovedByPeer(UserId),
     FriendRequestSendOk(FriendInfo),
     FriendRequestDeclineOk(UserId),
+    FriendRequestRemoveOk(UserId),
+    FriendRequestRemovedByPeer(UserId),
     FriendRemoveOk(UserId),
     Friends(Vec<FriendInfo>),
     IncomingFriendRequests(Vec<FriendInfo>),
     IncomingSessionRequests(Vec<SessionRequest>),
     OutgoingFriendRequests(Vec<FriendInfo>),
     OutgoingSessionRequests(Vec<SessionRequest>),
-    Pong { client_time: u64, server_time: u64 },
+    Pong {
+        client_time: u64,
+        server_time: u64,
+    },
     PrivateUserInfo(PrivateUserInfo),
     PublicSessionRequests(Vec<SessionRequest>),
     PublicUserInfo(PublicUserInfo),
@@ -35,7 +40,13 @@ pub enum ServerMessage {
     SessionRequestDeclinedByPeer(SessionRequestId),
     SessionRequestDeclineOk(SessionRequestId),
     SessionRequestIncoming(SessionRequest),
-    SessionUpdate { session_id: SessionId, mv: PlayMove },
+    SessionRequestRemoveOk(SessionRequestId),
+    SessionRequestRemovedByPeer(SessionRequestId),
+    SessionUpdate {
+        session_id: SessionId,
+        mv: PlayMove,
+        at: u64,
+    },
 }
 
 impl ServerMessage {
@@ -59,6 +70,8 @@ impl ServerMessage {
             Self::FriendshipRemovedByPeer(_) => "friendship_removed_by_peer",
             Self::FriendRequestSendOk(_) => "friend_request_send_ok",
             Self::FriendRequestDeclineOk(_) => "friend_request_decline_ok",
+            Self::FriendRequestRemoveOk(_) => "friend_request_remove_ok",
+            Self::FriendRequestRemovedByPeer(_) => "friend_request_remove_by_peer",
             Self::FriendRemoveOk(_) => "friend_remove_ok",
             Self::Friends(_) => "friends",
             Self::IncomingFriendRequests(_) => "incoming_friend_requests",
@@ -76,6 +89,8 @@ impl ServerMessage {
             Self::SessionRequestDeclinedByPeer(_) => "session_request_declined_by_peer",
             Self::SessionRequestDeclineOk(_) => "session_request_decline_ok",
             Self::SessionRequestIncoming(_) => "session_request_incoming",
+            Self::SessionRequestRemoveOk(_) => "session_request_remove_ok",
+            Self::SessionRequestRemovedByPeer(_) => "session_request_removed_by_peer",
             Self::SessionUpdate { .. } => "session_update",
         }
     }

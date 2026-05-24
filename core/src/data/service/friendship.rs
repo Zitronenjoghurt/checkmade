@@ -94,6 +94,18 @@ impl FriendshipService {
         Ok(())
     }
 
+    pub async fn remove_request(&self, source_id: Uuid, target_id: Uuid) -> CoreResult<()> {
+        let success = self
+            .data
+            .friends
+            .delete_by_id((source_id, target_id))
+            .await?;
+        if success.rows_affected == 0 {
+            return Err(DomainError::NoFriendRequest.into());
+        }
+        Ok(())
+    }
+
     async fn pending_request(
         &self,
         source_id: Uuid,
