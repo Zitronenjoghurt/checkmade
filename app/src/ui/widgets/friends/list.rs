@@ -33,10 +33,10 @@ impl<'a> egui::Widget for Friendlist<'a> {
                     if friends.is_empty() {
                         ui.label("No friends");
                     } else {
-                        for (id, since) in friends {
+                        for (id, fi) in friends {
                             if let Some(info) = self.store.users.get(*id) {
-                                let elapsed = self.server_time.elapsed_since(*since);
-                                FriendWidget::new(info, self.ws, elapsed).ui(ui);
+                                let elapsed = self.server_time.elapsed_since(fi.since);
+                                FriendWidget::new(fi, info, self.ws, elapsed).ui(ui);
                             } else {
                                 ui.spinner();
                             }

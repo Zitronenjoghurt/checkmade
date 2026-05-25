@@ -15,6 +15,7 @@ use crate::utils::images::Images;
 use crate::ws::Ws;
 use checkmade_core::game::play_event::PlayEvent;
 use checkmade_core::giga_chess::prelude::event::SessionEvent;
+use checkmade_core::giga_chess::prelude::{Color, GameOutcome};
 use checkmade_core::lingo::Lingo::*;
 use checkmade_core::messages::server::ServerMessage;
 use egui::{CentralPanel, Panel, Widget};
@@ -123,7 +124,7 @@ impl Checkmade {
             ServerMessage::FriendRequestIncoming(info) => {
                 self.store
                     .incoming_friend_requests
-                    .insert(info.user_id, info.since);
+                    .insert(info.user_id, info.created);
             }
             ServerMessage::FriendRequestDeclinedByPeer(id) => {
                 self.store.outgoing_friend_requests.remove(&id);
@@ -131,7 +132,7 @@ impl Checkmade {
             ServerMessage::FriendshipEstablished(info) => {
                 self.store.incoming_friend_requests.remove(&info.user_id);
                 self.store.outgoing_friend_requests.remove(&info.user_id);
-                self.store.friends.insert(info.user_id, info.since);
+                self.store.friends.insert(info.user_id, info);
                 self.toasts.success(FriendAdded.t());
             }
             ServerMessage::FriendshipRemovedByPeer(id) => {
@@ -140,7 +141,7 @@ impl Checkmade {
             ServerMessage::FriendRequestSendOk(info) => {
                 self.store
                     .outgoing_friend_requests
-                    .insert(info.user_id, info.since);
+                    .insert(info.user_id, info.created);
                 self.toasts.success(FriendRequestSent.t());
             }
             ServerMessage::FriendRequestDeclineOk(id) => {
@@ -158,11 +159,14 @@ impl Checkmade {
                 self.toasts.success(FriendRemoved.t());
             }
             ServerMessage::Friends(friends) => {
-                let map = friends.into_iter().map(|f| (f.user_id, f.since)).collect();
+                let map = friends.into_iter().map(|f| (f.user_id, f)).collect();
                 self.store.friends.set_value(map);
             }
             ServerMessage::IncomingFriendRequests(requests) => {
-                let map = requests.into_iter().map(|r| (r.user_id, r.since)).collect();
+                let map = requests
+                    .into_iter()
+                    .map(|r| (r.user_id, r.created))
+                    .collect();
                 self.store.incoming_friend_requests.set_value(map);
             }
             ServerMessage::IncomingSessionRequests(requests) => {
@@ -171,7 +175,10 @@ impl Checkmade {
                     .set_value(requests.into_iter().map(|r| (r.id, r)).collect());
             }
             ServerMessage::OutgoingFriendRequests(requests) => {
-                let map = requests.into_iter().map(|r| (r.user_id, r.since)).collect();
+                let map = requests
+                    .into_iter()
+                    .map(|r| (r.user_id, r.created))
+                    .collect();
                 self.store.outgoing_friend_requests.set_value(map);
             }
             ServerMessage::OutgoingSessionRequests(requests) => {
@@ -438,6 +445,38 @@ impl Checkmade {
                     if let Some(session_id) = self.ui.arena.session_id() {
                         self.ui.arena.subscribed_session = None;
                         self.ws.unsubscribe_session(session_id);
+                        if let Some(session) = self.store.sessions.get_entry(&session_id)
+                            && let Some(me) = self.store.me.value.as_ref()
+                        {
+                            let me_color = if session.white == me.public.id {
+                                Some(Color::White)
+                            } else if session.black == me.public.id {
+                                Some(Color::Black)
+                            } else {
+                                None
+                            };
+                            if let Some(me_color) = me_color {
+                                let opponent_id = if me_color == Color::White {
+                                    session.black
+                                } else {
+                                    session.white
+                                };
+                                if let Some(friend_info) =
+                                    self.store.friends.get_entry_mut(&opponent_id)
+                                {
+                                    match outcome {
+                                        GameOutcome::Decisive { winner, .. } => {
+                                            if winner == me_color {
+                                                friend_info.times_won += 1
+                                            } else {
+                                                friend_info.times_lost += 1
+                                            }
+                                        }
+                                        GameOutcome::Draw(_) => friend_info.times_drawn += 1,
+                                    }
+                                }
+                            }
+                        }
                     }
                     self.ui.arena.transform_active_into_sandbox(&self.store);
                 }

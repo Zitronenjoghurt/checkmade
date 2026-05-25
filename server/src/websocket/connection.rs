@@ -9,7 +9,7 @@ use checkmade_core::error::DomainError;
 use checkmade_core::game::play_move::PlayMove;
 use checkmade_core::messages::client::ClientMessage;
 use checkmade_core::messages::server::ServerMessage;
-use checkmade_core::types::friend_info::FriendInfo;
+use checkmade_core::types::friend_info::{FriendInfo, FriendRequestInfo};
 use checkmade_core::types::session_request::{CreateSessionRequest, SessionRequest};
 use checkmade_core::types::session_status::SessionStatus;
 use futures_util::stream::SplitStream;
@@ -235,17 +235,23 @@ impl WebsocketConnection {
             .await?;
 
         let since = fs.created_at.and_utc().timestamp_millis() as u64;
-        self.respond(ServerMessage::FriendshipEstablished(FriendInfo {
-            user_id: target_id.into(),
-            since,
-        }));
-        self.send_to_user(
-            target_id,
-            ServerMessage::FriendshipEstablished(FriendInfo {
-                user_id: self.user_id.into(),
-                since,
-            }),
-        );
+
+        let my_info = self
+            .state
+            .service
+            .friends
+            .friend_info(self.user_id, target_id, since)
+            .await?;
+
+        let their_info = self
+            .state
+            .service
+            .friends
+            .friend_info(target_id, self.user_id, since)
+            .await?;
+
+        self.respond(ServerMessage::FriendshipEstablished(my_info));
+        self.send_to_user(target_id, ServerMessage::FriendshipEstablished(their_info));
 
         Ok(())
     }
@@ -349,28 +355,13 @@ impl WebsocketConnection {
     }
 
     async fn handle_friends(&self) -> ServerResult<()> {
-        let friends = self
+        let page = self
             .state
             .service
             .friends
-            .paginate_friends(self.user_id, self.state.config.core.friend_limit)
-            .fetch_page(0)
-            .await?
-            .into_iter()
-            .map(|fs| {
-                let friend_id = if fs.addressee_id == self.user_id {
-                    fs.requester_id
-                } else {
-                    fs.addressee_id
-                };
-                FriendInfo {
-                    user_id: friend_id.into(),
-                    since: fs.created_at.and_utc().timestamp_millis() as u64,
-                }
-            })
-            .collect::<Vec<_>>();
-        self.respond(ServerMessage::Friends(friends));
-
+            .friends_with_stats(self.user_id, self.state.config.core.friend_limit, 0)
+            .await?;
+        self.respond(ServerMessage::Friends(page.items));
         Ok(())
     }
 
@@ -389,9 +380,9 @@ impl WebsocketConnection {
                 } else {
                     fs.addressee_id
                 };
-                FriendInfo {
+                FriendRequestInfo {
                     user_id: friend_id.into(),
-                    since: fs.created_at.and_utc().timestamp_millis() as u64,
+                    created: fs.created_at.and_utc().timestamp_millis() as u64,
                 }
             })
             .collect::<Vec<_>>();
@@ -431,9 +422,9 @@ impl WebsocketConnection {
                 } else {
                     fs.addressee_id
                 };
-                FriendInfo {
+                FriendRequestInfo {
                     user_id: friend_id.into(),
-                    since: fs.created_at.and_utc().timestamp_millis() as u64,
+                    created: fs.created_at.and_utc().timestamp_millis() as u64,
                 }
             })
             .collect::<Vec<_>>();
@@ -588,16 +579,16 @@ impl WebsocketConnection {
             .send_request(self.user_id, friend_code)
             .await?;
 
-        self.respond(ServerMessage::FriendRequestSendOk(FriendInfo {
+        self.respond(ServerMessage::FriendRequestSendOk(FriendRequestInfo {
             user_id: fs.addressee_id.into(),
-            since: fs.created_at.and_utc().timestamp_millis() as u64,
+            created: fs.created_at.and_utc().timestamp_millis() as u64,
         }));
 
         self.send_to_user(
             fs.addressee_id,
-            ServerMessage::FriendRequestIncoming(FriendInfo {
+            ServerMessage::FriendRequestIncoming(FriendRequestInfo {
                 user_id: self.user_id.into(),
-                since: fs.created_at.and_utc().timestamp_millis() as u64,
+                created: fs.created_at.and_utc().timestamp_millis() as u64,
             }),
         );
 

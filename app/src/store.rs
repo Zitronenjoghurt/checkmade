@@ -4,6 +4,7 @@ use crate::ws::fetchable::Fetchable;
 use crate::ws::Ws;
 use checkmade_core::game::play_session::PlaySession;
 use checkmade_core::giga_chess::prelude::{Color, Piece};
+use checkmade_core::types::friend_info::FriendInfo;
 use checkmade_core::types::session_id::SessionId;
 use checkmade_core::types::session_request::{SessionRequest, SessionRequestId};
 use checkmade_core::types::user_id::UserId;
@@ -12,7 +13,7 @@ use std::collections::HashMap;
 
 pub struct Store {
     pub sessions: Fetchable<HashMap<SessionId, PlaySession>>,
-    pub friends: Fetchable<HashMap<UserId, u64>>,
+    pub friends: Fetchable<HashMap<UserId, FriendInfo>>,
     pub incoming_friend_requests: Fetchable<HashMap<UserId, u64>>,
     pub incoming_session_requests: Fetchable<HashMap<SessionRequestId, SessionRequest>>,
     pub me: Fetchable<PrivateUserInfo>,

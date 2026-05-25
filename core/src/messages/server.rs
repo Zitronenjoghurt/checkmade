@@ -1,7 +1,7 @@
 use crate::error::CoreResult;
 use crate::game::play_move::PlayMove;
 use crate::game::play_session::PlaySession;
-use crate::types::friend_info::FriendInfo;
+use crate::types::friend_info::{FriendInfo, FriendRequestInfo};
 use crate::types::session_id::SessionId;
 use crate::types::session_request::{SessionRequest, SessionRequestId};
 use crate::types::user_id::UserId;
@@ -13,19 +13,19 @@ use giga_chess::prelude::Color;
 pub enum ServerMessage {
     ActiveSessions(Vec<PlaySession>),
     Error(String),
-    FriendRequestIncoming(FriendInfo),
+    FriendRequestIncoming(FriendRequestInfo),
     FriendRequestDeclinedByPeer(UserId),
     FriendshipEstablished(FriendInfo),
     FriendshipRemovedByPeer(UserId),
-    FriendRequestSendOk(FriendInfo),
+    FriendRequestSendOk(FriendRequestInfo),
     FriendRequestDeclineOk(UserId),
     FriendRequestRemoveOk(UserId),
     FriendRequestRemovedByPeer(UserId),
     FriendRemoveOk(UserId),
     Friends(Vec<FriendInfo>),
-    IncomingFriendRequests(Vec<FriendInfo>),
+    IncomingFriendRequests(Vec<FriendRequestInfo>),
     IncomingSessionRequests(Vec<SessionRequest>),
-    OutgoingFriendRequests(Vec<FriendInfo>),
+    OutgoingFriendRequests(Vec<FriendRequestInfo>),
     OutgoingSessionRequests(Vec<SessionRequest>),
     Pong {
         client_time: u64,

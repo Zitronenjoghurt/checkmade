@@ -5,22 +5,30 @@ use crate::ui::modal::Modal;
 use crate::ui::widgets::with_badge::WithBadge;
 use crate::utils::fmt::fmt_duration;
 use checkmade_core::lingo::Lingo::*;
+use checkmade_core::types::friend_info::FriendInfo;
 use checkmade_core::types::user_info::PublicUserInfo;
 use egui::{Align, Color32, Frame, Label, Layout, Response, Ui, Widget};
 
 pub struct FriendWidget<'a> {
-    info: &'a PublicUserInfo,
+    friend_info: &'a FriendInfo,
+    user_info: &'a PublicUserInfo,
     ws: &'a mut crate::ws::Ws,
     ago: web_time::Duration,
 }
 
 impl<'a> FriendWidget<'a> {
     pub fn new(
-        info: &'a PublicUserInfo,
+        friend_info: &'a FriendInfo,
+        user_info: &'a PublicUserInfo,
         ws: &'a mut crate::ws::Ws,
         ago: web_time::Duration,
     ) -> Self {
-        Self { info, ws, ago }
+        Self {
+            friend_info,
+            user_info,
+            ws,
+            ago,
+        }
     }
 
     fn remove_modal(&mut self, ui: &mut Ui) -> Modal {
@@ -28,13 +36,13 @@ impl<'a> FriendWidget<'a> {
 
         modal.show(|ui| {
             modal.title(ui, ModalRemoveFriendTitle.t());
-            modal.body(ui, tl!(ModalRemoveFriendBody, x = &self.info.username));
+            modal.body(ui, tl!(ModalRemoveFriendBody, x = &self.user_info.username));
             modal.buttons(ui, |ui| {
                 if modal.button(ui, Cancel.t()).clicked() {
                     modal.close();
                 }
                 if modal.caution_button(ui, Remove.t()).clicked() {
-                    self.ws.remove_friend(self.info.id);
+                    self.ws.remove_friend(self.user_info.id);
                     modal.close();
                 }
             });
@@ -52,7 +60,7 @@ impl<'a> Widget for FriendWidget<'a> {
             .show(ui, |ui| {
                 ui.set_min_width(ui.available_width());
                 ui.horizontal(|ui| {
-                    let color = if self.info.is_online {
+                    let color = if self.user_info.is_online {
                         Color32::GREEN
                     } else {
                         Color32::GRAY
@@ -64,12 +72,26 @@ impl<'a> Widget for FriendWidget<'a> {
                     );
 
                     ui.vertical(|ui| {
-                        ui.label(&self.info.username);
-                        ui.small(format!(
-                            "{}: {}",
-                            FriendsSince.t(),
-                            tl!(XAgo, x = fmt_duration(self.ago))
-                        ));
+                        ui.label(&self.user_info.username);
+                        ui.horizontal(|ui| {
+                            ui.small(format!(
+                                "{}: {}",
+                                FriendsSince.t(),
+                                tl!(XAgo, x = fmt_duration(self.ago))
+                            ));
+                            ui.separator();
+                            ui.small(format!("{} {}", icons::TROPHY, self.friend_info.times_won));
+                            ui.small(format!(
+                                "{} {}",
+                                icons::SMILEY_SAD,
+                                self.friend_info.times_lost
+                            ));
+                            ui.small(format!(
+                                "{} {}",
+                                icons::SCALES,
+                                self.friend_info.times_drawn
+                            ));
+                        })
                     });
 
                     ui.with_layout(Layout::right_to_left(Align::Center), |ui| {

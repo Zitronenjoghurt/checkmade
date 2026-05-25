@@ -1,8 +1,9 @@
 use crate::config::CoreConfig;
 use crate::data::entity::friendship;
-use crate::data::store::{Paginate, Store};
+use crate::data::store::{Page, Paginate, Store};
 use crate::data::Data;
 use crate::error::{CoreResult, DomainError};
+use crate::types::friend_info::FriendInfo;
 use crate::types::friendship_status::FriendshipStatus;
 use sea_orm::{ColumnTrait, ExprTrait};
 use sea_orm::{IntoActiveModel, Set};
@@ -178,5 +179,49 @@ impl FriendshipService {
             .friends
             .paginate_by_user(id, page_size)
             .filter(friendship::Column::Status.eq(FriendshipStatus::Accepted as i16))
+    }
+
+    pub async fn friends_with_stats(
+        &self,
+        user_id: Uuid,
+        page_size: u64,
+        page: u64,
+    ) -> CoreResult<Page<FriendInfo>> {
+        self.data
+            .friends
+            .paginate_friends_with_stats(user_id, page, page_size)
+            .await
+            .map(|p| {
+                p.map(|fs| {
+                    let friend_id = if fs.requester_id == user_id {
+                        fs.addressee_id
+                    } else {
+                        fs.requester_id
+                    };
+                    FriendInfo {
+                        user_id: friend_id.into(),
+                        since: fs.created_at.and_utc().timestamp_millis() as u64,
+                        times_won: fs.times_won as u64,
+                        times_lost: fs.times_lost as u64,
+                        times_drawn: fs.times_drawn as u64,
+                    }
+                })
+            })
+    }
+
+    pub async fn friend_info(
+        &self,
+        user_id: Uuid,
+        friend_id: Uuid,
+        since: u64,
+    ) -> CoreResult<FriendInfo> {
+        let (won, lost, drawn) = self.data.friends.pair_stats(user_id, friend_id).await?;
+        Ok(FriendInfo {
+            user_id: friend_id.into(),
+            since,
+            times_won: won as u64,
+            times_lost: lost as u64,
+            times_drawn: drawn as u64,
+        })
     }
 }

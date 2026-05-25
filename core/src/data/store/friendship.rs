@@ -1,12 +1,17 @@
 use crate::config::CoreConfig;
-use crate::data::entity::friendship;
-use crate::data::store::{Paginate, Store};
+use crate::data::entity::{friendship, session};
+use crate::data::store::{Page, Paginate, Store};
 use crate::error::{CoreError, CoreResult, DomainError};
 use crate::types::friendship_status::FriendshipStatus;
+use crate::types::session_status::SessionStatus;
 use futures::stream::BoxStream;
 use futures::StreamExt;
-use sea_orm::sea_query::IntoCondition;
-use sea_orm::{ColumnTrait, ExprTrait, Set};
+use sea_orm::prelude::Expr;
+use sea_orm::sea_query::prelude::NaiveDateTime;
+use sea_orm::sea_query::{Alias, ConditionType, IntoCondition, IntoIden, IntoTableRef, SimpleExpr};
+use sea_orm::{
+    ColumnTrait, ExprTrait, FromQueryResult, Identity, JoinType, RelationDef, RelationType, Set,
+};
 use sea_orm::{Condition, DatabaseConnection, EntityTrait};
 use sea_orm::{QueryFilter, QuerySelect};
 use std::sync::Arc;
@@ -194,4 +199,214 @@ impl FriendshipStore {
             )
             .add(friendship::Column::Status.eq(status as i16))
     }
+}
+
+// With stats
+impl FriendshipStore {
+    fn session_join() -> RelationDef {
+        RelationDef {
+            rel_type: RelationType::HasMany,
+            from_tbl: friendship::Entity.into_table_ref(),
+            to_tbl: session::Entity.into_table_ref(),
+            from_col: Identity::Binary(
+                friendship::Column::RequesterId.into_iden(),
+                friendship::Column::AddresseeId.into_iden(),
+            ),
+            to_col: Identity::Binary(
+                session::Column::WhiteId.into_iden(),
+                session::Column::BlackId.into_iden(),
+            ),
+            is_owner: false,
+            skip_fk: false,
+            on_delete: None,
+            on_update: None,
+            fk_name: None,
+            condition_type: ConditionType::Any,
+            on_condition: Some(std::sync::Arc::new(|f, s| {
+                Condition::all()
+                    .add(
+                        Expr::col((f.clone(), friendship::Column::AddresseeId))
+                            .equals((s.clone(), session::Column::WhiteId)),
+                    )
+                    .add(
+                        Expr::col((f, friendship::Column::RequesterId))
+                            .equals((s, session::Column::BlackId)),
+                    )
+            })),
+        }
+    }
+
+    fn wins_case(user_id: Uuid) -> SimpleExpr {
+        Expr::case(
+            Condition::any()
+                .add(
+                    Expr::col((Alias::new("s"), session::Column::WhiteId))
+                        .eq(user_id)
+                        .and(
+                            Expr::col((Alias::new("s"), session::Column::Status))
+                                .eq(SessionStatus::WhiteWins as i16),
+                        ),
+                )
+                .add(
+                    Expr::col((Alias::new("s"), session::Column::BlackId))
+                        .eq(user_id)
+                        .and(
+                            Expr::col((Alias::new("s"), session::Column::Status))
+                                .eq(SessionStatus::BlackWins as i16),
+                        ),
+                ),
+            1,
+        )
+        .finally(0)
+        .into()
+    }
+
+    fn losses_case(user_id: Uuid) -> SimpleExpr {
+        Expr::case(
+            Condition::any()
+                .add(
+                    Expr::col((Alias::new("s"), session::Column::WhiteId))
+                        .eq(user_id)
+                        .and(
+                            Expr::col((Alias::new("s"), session::Column::Status))
+                                .eq(SessionStatus::BlackWins as i16),
+                        ),
+                )
+                .add(
+                    Expr::col((Alias::new("s"), session::Column::BlackId))
+                        .eq(user_id)
+                        .and(
+                            Expr::col((Alias::new("s"), session::Column::Status))
+                                .eq(SessionStatus::WhiteWins as i16),
+                        ),
+                ),
+            1,
+        )
+        .finally(0)
+        .into()
+    }
+
+    fn draws_case() -> SimpleExpr {
+        Expr::case(
+            Expr::col((Alias::new("s"), session::Column::Status)).eq(SessionStatus::Draw as i16),
+            1,
+        )
+        .finally(0)
+        .into()
+    }
+
+    pub async fn paginate_friends_with_stats(
+        &self,
+        user_id: Uuid,
+        page: u64,
+        page_size: u64,
+    ) -> CoreResult<Page<FriendshipWithStats>> {
+        let accepted_filter = Condition::all()
+            .add(
+                Condition::any()
+                    .add(friendship::Column::RequesterId.eq(user_id))
+                    .add(friendship::Column::AddresseeId.eq(user_id)),
+            )
+            .add(friendship::Column::Status.eq(FriendshipStatus::Accepted as i16));
+
+        // Total count (cheap, no join needed)
+        let total_items = Self::count_with(self.db(), accepted_filter.clone()).await?;
+        let total_pages = if page_size == 0 {
+            1
+        } else {
+            total_items.div_ceil(page_size)
+        };
+
+        let items = friendship::Entity::find()
+            .join_as(JoinType::LeftJoin, Self::session_join(), Alias::new("s"))
+            .select_only()
+            .column(friendship::Column::RequesterId)
+            .column(friendship::Column::AddresseeId)
+            .column(friendship::Column::CreatedAt)
+            .column_as(
+                Expr::cust_with_expr("COALESCE(SUM($1), 0)", Self::wins_case(user_id)),
+                "times_won",
+            )
+            .column_as(
+                Expr::cust_with_expr("COALESCE(SUM($1), 0)", Self::losses_case(user_id)),
+                "times_lost",
+            )
+            .column_as(
+                Expr::cust_with_expr("COALESCE(SUM($1), 0)", Self::draws_case()),
+                "times_drawn",
+            )
+            .filter(accepted_filter)
+            .group_by(friendship::Column::RequesterId)
+            .group_by(friendship::Column::AddresseeId)
+            .group_by(friendship::Column::CreatedAt)
+            .offset(Some(page * page_size))
+            .limit(Some(page_size))
+            .into_model::<FriendshipWithStats>()
+            .all(self.db())
+            .await?;
+
+        Ok(Page {
+            items,
+            page,
+            page_size,
+            total_items,
+            total_pages,
+        })
+    }
+
+    pub async fn pair_stats(&self, user_id: Uuid, friend_id: Uuid) -> CoreResult<(i64, i64, i64)> {
+        #[derive(FromQueryResult)]
+        struct Stats {
+            times_won: i64,
+            times_lost: i64,
+            times_drawn: i64,
+        }
+
+        let result = friendship::Entity::find()
+            .join_as(JoinType::LeftJoin, Self::session_join(), Alias::new("s"))
+            .select_only()
+            .column_as(
+                Expr::cust_with_expr("COALESCE(SUM($1), 0)", Self::wins_case(user_id)),
+                "times_won",
+            )
+            .column_as(
+                Expr::cust_with_expr("COALESCE(SUM($1), 0)", Self::losses_case(user_id)),
+                "times_lost",
+            )
+            .column_as(
+                Expr::cust_with_expr("COALESCE(SUM($1), 0)", Self::draws_case()),
+                "times_drawn",
+            )
+            .filter(
+                Condition::any()
+                    .add(
+                        friendship::Column::RequesterId
+                            .eq(user_id)
+                            .and(friendship::Column::AddresseeId.eq(friend_id)),
+                    )
+                    .add(
+                        friendship::Column::RequesterId
+                            .eq(friend_id)
+                            .and(friendship::Column::AddresseeId.eq(user_id)),
+                    ),
+            )
+            .into_model::<Stats>()
+            .one(self.db())
+            .await?;
+
+        match result {
+            Some(s) => Ok((s.times_won, s.times_lost, s.times_drawn)),
+            None => Ok((0, 0, 0)),
+        }
+    }
+}
+
+#[derive(Debug, FromQueryResult)]
+pub struct FriendshipWithStats {
+    pub requester_id: Uuid,
+    pub addressee_id: Uuid,
+    pub created_at: NaiveDateTime,
+    pub times_won: i64,
+    pub times_lost: i64,
+    pub times_drawn: i64,
 }
