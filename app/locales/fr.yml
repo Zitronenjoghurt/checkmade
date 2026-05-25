@@ -1,16 +1,29 @@
+accept_draw: x
+accept_draw_info: x
 add_friend: x
+agreement: x
 arena: x
 attempting_reconnect: x
+black: x
 cancel: x
 categories: x
+checkmate: x
+claim_draw: x
+claim_draw_info: x
 coming_soon: x
 connected: x
 connection_established: x
 connection_lost: x
+confirm: d'acc
 copied_to_clipboard: x
 create: x
+decline_draw: x
+decline_draw_info: x
 disconnected: x
+draw_by_x: x
 fetching_user_info: x
+fivefold_repetition: x
+fifty_move_rule: x
 friend_request_declined: x
 friend_request_received: x
 friend_request_sent: x
@@ -23,6 +36,7 @@ games: x
 game_mode: x
 game_mode_standard: x
 general: x
+insufficient_material: x
 last_turn: x
 latency: x
 list: x
@@ -33,6 +47,9 @@ no_friends: x
 no_friend_requests: x
 no_ongoing_games: x
 no_session_requests: x
+offer_draw: x
+offer_draw_info: x
+ongoing_game: x
 ongoing_games: x
 opponent: x
 pawn_promotion: x
@@ -43,15 +60,26 @@ public_games: x
 public_requests: x
 remove: x
 requests: x
+resign: x
+resign_info: x
+resignation: x
 sandbox: x
 server_time: x
 session_request_created: x
 session_request_declined: x
 session_request_received: x
 settings: x
+seventy_five_move_rule: x
+stalemate: x
+threefold_repetition: x
+timeout: x
+timeout_vs_insufficient: x
 turn: x
 turns: x
 ui_scale: x
 waiting_for_opponent: x
+white: x
 x_ago: '%{x} x'
+x_to_move: '%{x} x'
+x_wins_by: '%{x} x'
 your_turn: x

@@ -10,14 +10,13 @@ use checkmade_core::types::user_info::{PrivateUserInfo, PublicUserInfo};
 use std::collections::HashMap;
 
 pub struct Store {
-    pub active_sessions: Fetchable<HashMap<SessionId, PlaySession>>,
+    pub sessions: Fetchable<HashMap<SessionId, PlaySession>>,
     pub friends: Fetchable<HashMap<UserId, u64>>,
     pub incoming_friend_requests: Fetchable<HashMap<UserId, u64>>,
     pub incoming_session_requests: Fetchable<HashMap<SessionRequestId, SessionRequest>>,
     pub me: Fetchable<PrivateUserInfo>,
     pub outgoing_friend_requests: Fetchable<HashMap<UserId, u64>>,
     pub outgoing_session_requests: Fetchable<HashMap<SessionRequestId, SessionRequest>>,
-    pub passive_sessions: Fetchable<HashMap<SessionId, PlaySession>>,
     pub public_session_requests: Fetchable<HashMap<SessionRequestId, SessionRequest>>,
     pub users: FetchableCache<UserId, PublicUserInfo>,
 }
@@ -25,14 +24,13 @@ pub struct Store {
 impl Default for Store {
     fn default() -> Self {
         Self {
-            active_sessions: Fetchable::new(),
+            sessions: Fetchable::new(),
             friends: Fetchable::new(),
             incoming_friend_requests: Fetchable::new(),
             incoming_session_requests: Fetchable::new(),
             me: Fetchable::new(),
             outgoing_friend_requests: Fetchable::new(),
             outgoing_session_requests: Fetchable::new(),
-            passive_sessions: Fetchable::new(),
             public_session_requests: Fetchable::new(),
             users: FetchableCache::new().with_fetch_cooldown(web_time::Duration::from_millis(200)),
         }
@@ -45,7 +43,7 @@ impl Store {
             self.invalidate();
         }
 
-        self.active_sessions
+        self.sessions
             .request_if_needed(|| ws.request_active_sessions());
         self.friends.request_if_needed(|| ws.request_friends());
         self.incoming_friend_requests
@@ -63,14 +61,13 @@ impl Store {
     }
 
     fn invalidate(&mut self) {
-        self.active_sessions.invalidate();
+        self.sessions.invalidate();
         self.friends.invalidate();
         self.incoming_friend_requests.invalidate();
         self.incoming_session_requests.invalidate();
         self.me.invalidate();
         self.outgoing_friend_requests.invalidate();
         self.outgoing_session_requests.invalidate();
-        self.passive_sessions.invalidate();
         self.public_session_requests.invalidate();
         self.users.invalidate();
     }
@@ -98,7 +95,7 @@ impl Store {
         let Some(me) = self.me.value.as_ref() else {
             return 0;
         };
-        self.active_sessions
+        self.sessions
             .value
             .as_ref()
             .map(|v| v.values().filter(|s| s.can_move(me.public.id)).count())
@@ -109,7 +106,7 @@ impl Store {
 // Session helpers
 impl Store {
     pub fn session_captured_pieces(&self, session_id: SessionId, color: Color) -> &[Piece] {
-        let Some(session) = self.active_sessions.get_entry(&session_id) else {
+        let Some(session) = self.sessions.get_entry(&session_id) else {
             return &[];
         };
         session.captured_pieces(color)

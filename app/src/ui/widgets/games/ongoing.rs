@@ -23,22 +23,28 @@ impl<'a> GamesOngoing<'a> {
 
 impl egui::Widget for GamesOngoing<'_> {
     fn ui(self, ui: &mut Ui) -> Response {
-        let Some(active) = self.store.active_sessions.value.as_ref() else {
+        let Some(sessions) = self.store.sessions.value.as_ref() else {
             return ui.spinner();
         };
+
+        let mut active = sessions
+            .values()
+            .filter(|s| s.is_ongoing())
+            .collect::<Vec<_>>();
+        active.sort_by_key(|b| b.updated);
 
         let Some(me) = self.store.me.value.as_ref() else {
             return ui.spinner();
         };
 
-        if active.is_empty() {
+        if sessions.is_empty() {
             return ui.label(NoOngoingGames.t());
         };
 
         ScrollArea::vertical()
             .show(ui, |ui| {
                 ui.vertical(|ui| {
-                    for session in active.values() {
+                    for session in active {
                         let opponent_id = if session.white == me.public.id {
                             session.black
                         } else if session.black == me.public.id {

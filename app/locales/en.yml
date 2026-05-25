@@ -1,16 +1,29 @@
+accept_draw: Accept draw
+accept_draw_info: "You accept the opponent's request and the game ends in a draw."
 add_friend: Add Friend
+agreement: Agreement
 arena: Arena
 attempting_reconnect: Attempting reconnect
+black: Black
 cancel: Cancel
 categories: Categories
+checkmate: Checkmate
+claim_draw: Claim draw
+claim_draw_info: By the current game state, it is possible to claim a draw, which will force the game to end in a draw.
 coming_soon: Coming soon
 connected: Connected
 connection_established: Connection established
 connection_lost: Connection lost
+confirm: Confirm
 copied_to_clipboard: Copied to clipboard
 create: Create
+decline_draw: Decline draw
+decline_draw_info: "You decline the opponent's request and the game continues."
 disconnected: Disconnected
+draw_by_x: 'Draw by %{x}'
 fetching_user_info: Fetching user info
+fivefold_repetition: Fivefold repetition
+fifty_move_rule: 50-move rule
 friend_request_declined: Friend request declined
 friend_request_received: Friend request received
 friend_request_sent: Friend request sent
@@ -23,6 +36,7 @@ games: Games
 game_mode: Game mode
 game_mode_standard: Standard
 general: General
+insufficient_material: Insufficient material
 last_turn: Last turn
 latency: Latency
 list: List
@@ -33,6 +47,9 @@ no_friends: No friends
 no_friend_requests: No friend requests
 no_ongoing_games: No ongoing games
 no_session_requests: No session requests
+offer_draw: Offer draw
+offer_draw_info: You offer the opponent to end the game in a draw.
+ongoing_game: Ongoing game
 ongoing_games: Ongoing games
 opponent: Opponent
 pawn_promotion: Pawn promotion
@@ -43,15 +60,26 @@ public_games: Public games
 public_requests: Public requests
 remove: Remove
 requests: Requests
+resign: Resign
+resign_info: You resign and your opponent wins.
+resignation: Resignation
 sandbox: Sandbox
 server_time: Server Time
 session_request_created: Session request created
 session_request_declined: Session request declined
 session_request_received: Session request received
 settings: Settings
+seventy_five_move_rule: 75-move rule
+stalemate: Stalemate
+threefold_repetition: Threefold repetition
+timeout: Timeout
+timeout_vs_insufficient: Timeout vs insufficient material
 turn: Turn
 turns: Turns
 ui_scale: UI Scale
 waiting_for_opponent: Waiting for opponent
+white: White
 x_ago: '%{x} ago'
+x_to_move: '%{x} to move'
+x_wins_by: '%{x} wins by'
 your_turn: It's your turn

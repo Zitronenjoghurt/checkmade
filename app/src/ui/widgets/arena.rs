@@ -1,13 +1,17 @@
 use crate::i18n::Translatable;
 use crate::store::Store;
+use crate::tl;
+use crate::ui::icons;
 use crate::ui::modal::Modal;
-use crate::ui::state::arena::ArenaState;
+use crate::ui::state::arena::{ArenaActions, ArenaState};
 use crate::ui::widgets::arena::user::ArenaUser;
 use crate::ui::widgets::board::{board_action, BoardAction, BoardWidget};
+use crate::utils::fmt::{fmt_color, fmt_outcome};
 use crate::utils::images::Images;
 use crate::ws::Ws;
+use checkmade_core::game::misc_action::MiscAction;
 use checkmade_core::giga_chess::prelude::Piece;
-use checkmade_core::lingo::Lingo::{Cancel, PawnPromotion};
+use checkmade_core::lingo::Lingo::*;
 use egui::RichText;
 
 mod user;
@@ -62,20 +66,114 @@ impl<'a> ArenaWidget<'a> {
 
         (modal, chosen)
     }
+
+    fn confirm_modal(ui: &mut egui::Ui, state: &mut ArenaState, store: &Store, ws: &mut Ws) {
+        let modal = Modal::new(ui.ctx(), "action_confirm_modal");
+
+        let Some(action) = state.pending_action.take() else {
+            return;
+        };
+
+        let (title, description) = match &action {
+            MiscAction::Resign => (Resign, ResignInfo),
+            MiscAction::OfferDraw => (OfferDraw, OfferDrawInfo),
+            MiscAction::AcceptDraw => (AcceptDraw, AcceptDrawInfo),
+            MiscAction::DeclineDraw => (DeclineDraw, DeclineDrawInfo),
+            MiscAction::ClaimDraw => (ClaimDraw, ClaimDrawInfo),
+        };
+
+        let mut confirmed = false;
+        let mut cancelled = false;
+
+        modal.show(|ui| {
+            modal.title(ui, title.t());
+            ui.label(description.t());
+            modal.buttons(ui, |ui| {
+                if modal.caution_button(ui, Confirm.t()).clicked() {
+                    confirmed = true;
+                    modal.close();
+                }
+                if modal.suggested_button(ui, Cancel.t()).clicked() {
+                    cancelled = true;
+                    modal.close();
+                }
+            });
+        });
+
+        if confirmed {
+            state.handle_action(action, store, ws);
+        } else if !cancelled && modal.is_open() {
+            state.pending_action = Some(action);
+        }
+    }
+
+    fn action_buttons(ui: &mut egui::Ui, actions: &ArenaActions, state: &mut ArenaState) {
+        let modal = Modal::new(ui.ctx(), "action_confirm_modal");
+
+        ui.horizontal(|ui| {
+            ui.spacing_mut().item_spacing.x = 4.0;
+
+            if actions.can_accept_or_decline_draw {
+                if ui
+                    .small_button(format!("{} {}", icons::CHECK_CIRCLE, AcceptDraw.t()))
+                    .clicked()
+                {
+                    state.pending_action = Some(MiscAction::AcceptDraw);
+                    modal.open();
+                }
+                if ui
+                    .small_button(format!("{} {}", icons::X_CIRCLE, DeclineDraw.t()))
+                    .clicked()
+                {
+                    state.pending_action = Some(MiscAction::DeclineDraw);
+                    modal.open();
+                }
+            }
+
+            if actions.can_claim_draw
+                && ui
+                    .small_button(format!("{} {}", icons::GAVEL, ClaimDraw.t()))
+                    .clicked()
+            {
+                state.pending_action = Some(MiscAction::ClaimDraw);
+                modal.open();
+            }
+
+            if actions.can_offer_draw
+                && !actions.can_accept_or_decline_draw
+                && ui
+                    .small_button(format!("{} {}", icons::HANDSHAKE, OfferDraw.t()))
+                    .clicked()
+            {
+                state.pending_action = Some(MiscAction::OfferDraw);
+                modal.open();
+            }
+
+            if actions.can_resign
+                && ui
+                    .small_button(format!("{} {}", icons::SKULL, Resign.t()))
+                    .clicked()
+            {
+                state.pending_action = Some(MiscAction::Resign);
+                modal.open();
+            }
+        });
+    }
 }
 
 impl egui::Widget for ArenaWidget<'_> {
     fn ui(self, ui: &mut egui::Ui) -> egui::Response {
-        let Some(user_id) = self.store.me.value.as_ref().map(|v| v.public.id) else {
+        let Some(me_id) = self.store.me.value.as_ref().map(|v| v.public.id) else {
             return ui.spinner();
         };
 
-        let Some(visuals) = self.state.visuals(user_id, self.store) else {
+        let Some(visuals) = self.state.visuals(me_id, self.store) else {
             return ui.spinner();
         };
         let board_visuals = visuals.board;
 
         let (promo_modal, chosen_piece) = Self::promotion_modal(ui);
+        Self::confirm_modal(ui, self.state, self.store, self.ws);
 
         if let Some(piece) = chosen_piece {
             if let Some((from, to)) = self.state.pending_promotion.take() {
@@ -86,6 +184,19 @@ impl egui::Widget for ArenaWidget<'_> {
         }
 
         ui.vertical(|ui| {
+            if let Some(outcome) = self.state.outcome(self.store) {
+                ui.heading(fmt_outcome(&outcome));
+            } else if let Some(color) = self.state.color_to_move(self.store) {
+                ui.horizontal(|ui| {
+                    ui.heading(tl!(XToMove, x = fmt_color(color)));
+                    let actions = self.state.actions(self.store, me_id);
+                    Self::action_buttons(ui, &actions, self.state);
+                });
+            } else {
+                ui.heading(OngoingGame.t().to_string());
+            };
+            ui.separator();
+
             let available_w = ui.available_width();
             let available_h = ui.available_height();
 
@@ -96,25 +207,21 @@ impl egui::Widget for ArenaWidget<'_> {
 
             let board_size = available_w.min(budget_for_board).max(0.0);
 
-            if let Some((user_id, color)) = visuals.top_player
-                && let Some(session_id) = self.state.session_id()
-            {
-                ArenaUser::new(session_id, user_id, color, self.images, self.store)
+            if let Some((user_id, color)) = visuals.top_player {
+                ArenaUser::new(self.state, user_id, color, self.images, self.store)
                     .width(board_size - 14.0)
                     .ui(ui);
             }
 
-            let (can_move, restriction) = self.state.movement(self.store, user_id);
+            let (can_move, restriction) = self.state.movement(self.store, me_id);
             BoardWidget::new(self.images, &board_visuals, "arena_board")
                 .size(board_size)
                 .can_move(can_move)
                 .move_restriction(restriction)
                 .ui(ui);
 
-            if let Some((user_id, color)) = visuals.bottom_player
-                && let Some(session_id) = self.state.session_id()
-            {
-                ArenaUser::new(session_id, user_id, color, self.images, self.store)
+            if let Some((user_id, color)) = visuals.bottom_player {
+                ArenaUser::new(self.state, user_id, color, self.images, self.store)
                     .width(board_size - 14.0)
                     .ui(ui);
             }

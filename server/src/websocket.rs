@@ -140,19 +140,21 @@ impl Websocket {
         self.subscriptions.unsubscribe(connection_id, session_id);
     }
 
-    pub fn broadcast_session(&self, session_id: Uuid, color: Color, mv: PlayMove, updated_at: u64) {
+    pub fn broadcast_session(
+        &self,
+        session_id: Uuid,
+        message: ServerMessage,
+        ignore_users: &[Uuid],
+    ) {
         self.subscriptions
             .with_subscribers(&session_id, |subscribers| {
                 for conn in subscribers {
-                    self.send_to_connection(
-                        *conn,
-                        ServerMessage::SessionUpdate {
-                            session_id: session_id.into(),
-                            color,
-                            mv: mv.clone(),
-                            at: updated_at,
-                        },
-                    );
+                    if let Some(user_id) = self.connection_user_id(*conn)
+                        && ignore_users.contains(&user_id)
+                    {
+                        continue;
+                    }
+                    self.send_to_connection(*conn, message.clone());
                 }
             });
     }

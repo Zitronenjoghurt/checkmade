@@ -467,15 +467,32 @@ impl WebsocketConnection {
 
     async fn handle_play_move(&self, session_id: Uuid, mv: PlayMove) -> ServerResult<()> {
         let play_time = server_time_ms();
-        let (color, _) = self
+        let (color, model) = self
             .state
             .data
             .session
             .play(self.user_id, session_id, mv.clone(), play_time)
             .await?;
+
+        let update = ServerMessage::SessionUpdate {
+            session_id: session_id.into(),
+            color,
+            mv: mv.clone(),
+            at: play_time,
+        };
+
+        self.send_to_user(self.user_id, update.clone());
+
+        let opponent_id = if self.user_id == model.white_id {
+            model.black_id
+        } else {
+            model.white_id
+        };
+        self.send_to_user(opponent_id, update.clone());
+
         self.state
             .ws
-            .broadcast_session(session_id, color, mv, play_time);
+            .broadcast_session(session_id, update, &[self.user_id, opponent_id]);
         Ok(())
     }
 

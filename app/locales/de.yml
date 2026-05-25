@@ -1,16 +1,29 @@
+accept_draw: Unentschieden Akzeptieren
+accept_draw_info: Du akzeptierst die Anfrage des Gegners und dieses Spiel endet im Unentschieden.
 add_friend: Freund hinzufügen
+agreement: Übereinstimmung
 arena: Arena
 attempting_reconnect: Verbindung wird wiederhergestellt
+black: Schwarz
 cancel: Abbrechen
 categories: Kategorien
+checkmate: Schachmatt
+claim_draw: Unentschieden Beanspruchen
+claim_draw_info: Durch die aktuellen Spielumstände lässt sich Beanspruchen, dass das Spiel im Unentschieden endet.
 coming_soon: Bald verfügbar
 connected: Verbunden
 connection_established: Verbindung hergestellt
 connection_lost: Verbindung verloren
+confirm: Bestätigen
 copied_to_clipboard: In die Zwischenablage kopiert
 create: Erstellen
+decline_draw: Unentschieden Ablehnen
+decline_draw_info: Du lehnst die Anfrage des Gegners ab und das Spiel wird fortgesetzt.
 disconnected: Verbindung getrennt
+draw_by_x: 'Unentschieden durch %{x}'
 fetching_user_info: Lade Benutzerinfos
+fivefold_repetition: Fünffachwiederholung
+fifty_move_rule: 50-Zug-Regel
 friend_request_declined: Freundschaftsanfrage abgelehnt
 friend_request_received: Freundschaftsanfrage empfangen
 friend_request_sent: Freundschaftsanfrage gesendet
@@ -23,6 +36,7 @@ games: Spiele
 game_mode: Spielmodus
 game_mode_standard: Standard
 general: Allgemein
+insufficient_material: Unzureichendes Material
 last_turn: Letzter Zug
 latency: Latenz
 list: Liste
@@ -33,6 +47,9 @@ no_friends: Keine Freunde
 no_friend_requests: Keine Freundschaftsanfragen
 no_ongoing_games: Keine laufenden Spiele
 no_session_requests: Keine Sitzungsanfragen
+offer_draw: Unentschieden anbieten
+offer_draw_info: Du bietest dem Gegner an, das Spiel im Unentschieden zu beenden.
+ongoing_game: Laufendes Spiel
 ongoing_games: Laufende Spiele
 opponent: Gegner
 pending: Ausstehend
@@ -43,15 +60,26 @@ public_games: Öffentliche Spiele
 public_requests: Öffentliche Anfragen
 remove: Entfernen
 requests: Anfragen
+resign: Aufgeben
+resign_info: Du gibst das Spiel auf und dein Gegner gewinnt.
+resignation: Resignation
 sandbox: Sandkasten
 server_time: Serverzeit
 session_request_created: Sitzungsanfrage erstellt
 session_request_declined: Sitzungsanfrage abgelehnt
 session_request_received: Sitzungsanfrage erhalten
 settings: Einstellungen
+seventy_five_move_rule: 75-Zug-Regel
+stalemate: Patt
+threefold_repetition: Dreifachwiederholung
+timeout: Zeitüberschreitung
+timeout_vs_insufficient: Zeitüberschreitung bei unzureichendem Materia
 turn: Zug
 turns: Züge
 ui_scale: UI Skalierung
 waiting_for_opponent: Warte auf Gegner
+white: Weiß
 x_ago: 'vor %{x}'
+x_to_move: '%{x} ist am Zug'
+x_wins_by: '%{x} gewinnt durch'
 your_turn: Du bist am Zug

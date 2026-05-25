@@ -14,6 +14,7 @@ use crate::ui::widgets::with_badge::WithBadge;
 use crate::utils::images::Images;
 use crate::ws::Ws;
 use checkmade_core::game::play_event::PlayEvent;
+use checkmade_core::giga_chess::prelude::event::SessionEvent;
 use checkmade_core::lingo::Lingo::*;
 use checkmade_core::messages::server::ServerMessage;
 use egui::{CentralPanel, Panel, Widget};
@@ -113,7 +114,7 @@ impl Checkmade {
         match msg {
             ServerMessage::ActiveSessions(sessions) => {
                 self.store
-                    .active_sessions
+                    .sessions
                     .set_value(sessions.into_iter().map(|s| (s.id, s)).collect());
             }
             ServerMessage::Error(err) => {
@@ -193,18 +194,14 @@ impl Checkmade {
             ServerMessage::PublicUserInfo(info) => self.store.users.set(info.id, info),
             ServerMessage::Session(session) => {
                 if let Some(me) = &self.store.me.value {
-                    if me.public.id == session.white || me.public.id == session.black {
-                        self.store.active_sessions.insert(session.id, session);
-                    } else {
-                        self.store.passive_sessions.insert(session.id, session);
-                    }
+                    self.store.sessions.insert(session.id, session);
                 }
             }
             ServerMessage::SessionStart {
                 session,
                 request_id,
             } => {
-                self.store.active_sessions.insert(session.id, session);
+                self.store.sessions.insert(session.id, session);
                 self.store.incoming_session_requests.remove(&request_id);
                 self.store.outgoing_session_requests.remove(&request_id);
             }
@@ -258,7 +255,7 @@ impl Checkmade {
                 mv,
                 at,
             } => {
-                let Some(session) = self.store.active_sessions.get_entry_mut(&session_id) else {
+                let Some(session) = self.store.sessions.get_entry_mut(&session_id) else {
                     self.ws.request_session(session_id);
                     return;
                 };
@@ -425,6 +422,18 @@ impl Checkmade {
     }
 
     fn handle_play_event(&mut self, event: PlayEvent) {
-        // ToDo:
+        match event {
+            PlayEvent::Normal(event) => match event {
+                SessionEvent::GameOver(outcome) => {
+                    if let Some(session_id) = self.ui.arena.session_id() {
+                        self.ui.arena.subscribed_session = None;
+                        self.ws.unsubscribe_session(session_id);
+                    }
+                    self.ui.arena.transform_active_into_sandbox(&self.store);
+                }
+                SessionEvent::DrawOffered { by } => {}
+                _ => {}
+            },
+        }
     }
 }

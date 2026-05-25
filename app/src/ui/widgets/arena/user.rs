@@ -1,12 +1,12 @@
 use crate::ui::icons;
+use crate::ui::state::arena::ArenaState;
 use crate::ui::widgets::piece_icons::PieceIcons;
 use checkmade_core::giga_chess::prelude::Color;
-use checkmade_core::types::session_id::SessionId;
 use checkmade_core::types::user_id::UserId;
 use egui::{Frame, Response, Ui};
 
 pub struct ArenaUser<'a> {
-    session_id: SessionId,
+    arena: &'a ArenaState,
     user_id: UserId,
     color: Color,
     images: &'a mut crate::utils::images::Images,
@@ -16,14 +16,14 @@ pub struct ArenaUser<'a> {
 
 impl<'a> ArenaUser<'a> {
     pub fn new(
-        session_id: SessionId,
+        arena: &'a ArenaState,
         user_id: UserId,
         color: Color,
         images: &'a mut crate::utils::images::Images,
         store: &'a mut crate::store::Store,
     ) -> Self {
         Self {
-            session_id,
+            arena,
             user_id,
             color,
             images,
@@ -44,10 +44,6 @@ impl egui::Widget for ArenaUser<'_> {
             return ui.spinner();
         };
 
-        let Some(session) = self.store.active_sessions.get_entry(&self.session_id) else {
-            return ui.spinner();
-        };
-
         Frame::group(ui.style())
             .show(ui, |ui| {
                 if let Some(width) = self.width {
@@ -60,9 +56,7 @@ impl egui::Widget for ArenaUser<'_> {
                         ui.strong(user.username);
                     });
 
-                    let captured_pieces = self
-                        .store
-                        .session_captured_pieces(self.session_id, self.color);
+                    let captured_pieces = self.arena.captured_pieces(self.store, self.color);
                     PieceIcons::new(captured_pieces, self.color.opposite(), self.images)
                         .overlap(2.0)
                         .ui(ui);

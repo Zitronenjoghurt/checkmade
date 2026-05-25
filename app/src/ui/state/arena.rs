@@ -1,9 +1,12 @@
 use crate::store::Store;
+use crate::ui::state::sandbox::SandboxState;
 use crate::ws::Ws;
+use checkmade_core::game::misc_action::MiscAction;
 use checkmade_core::game::play_move::PlayMove;
 use checkmade_core::game::visuals::BoardVisuals;
 use checkmade_core::giga_chess::prelude::action::SessionAction;
-use checkmade_core::giga_chess::prelude::{Color, Game, Piece, Square};
+use checkmade_core::giga_chess::prelude::state::GameState;
+use checkmade_core::giga_chess::prelude::{Color, GameOutcome, Piece, Square};
 use checkmade_core::messages::client::ClientMessage;
 use checkmade_core::types::session_id::SessionId;
 use checkmade_core::types::user_id::UserId;
@@ -16,6 +19,8 @@ pub struct ArenaState {
     pub source: ArenaSource,
     #[serde(skip, default)]
     pub pending_promotion: Option<(Square, Square)>,
+    #[serde(skip, default)]
+    pub pending_action: Option<MiscAction>,
 }
 
 impl Default for ArenaState {
@@ -25,6 +30,7 @@ impl Default for ArenaState {
             perspective: Color::White,
             source: ArenaSource::default(),
             pending_promotion: None,
+            pending_action: None,
         }
     }
 }
@@ -49,17 +55,67 @@ impl ArenaState {
     pub fn movement(&self, store: &Store, user_id: UserId) -> (bool, Option<Color>) {
         self.source.movement(store, user_id)
     }
+
+    pub fn captured_pieces<'a>(&'a self, store: &'a Store, color: Color) -> &'a [Piece] {
+        self.source.captured_pieces(store, color)
+    }
+
+    pub fn transform_active_into_sandbox(&mut self, store: &Store) {
+        let Some(me_id) = store.me.value.as_ref().map(|i| i.public.id) else {
+            return;
+        };
+
+        let ArenaSource::Active(id) = self.source else {
+            return;
+        };
+
+        let Some(session) = store.sessions.get_entry(&id) else {
+            return;
+        };
+
+        let perspective = if session.white == me_id {
+            Color::White
+        } else if session.black == me_id {
+            Color::Black
+        } else {
+            self.perspective
+        };
+
+        let sandbox = SandboxState {
+            game: session.game().clone(),
+            black_id: Some(session.black),
+            white_id: Some(session.white),
+            perspective,
+        };
+        self.source = ArenaSource::Sandbox(sandbox);
+    }
+
+    pub fn outcome(&self, store: &Store) -> Option<GameOutcome> {
+        self.source.outcome(store)
+    }
+
+    pub fn color_to_move(&self, store: &Store) -> Option<Color> {
+        self.source.color_to_move(store)
+    }
+
+    pub fn actions(&self, store: &Store, user_id: UserId) -> ArenaActions {
+        self.source.actions(store, user_id)
+    }
+
+    pub fn handle_action(&mut self, action: MiscAction, store: &Store, ws: &mut Ws) {
+        self.source.handle_action(action, store, ws);
+    }
 }
 
 #[derive(serde::Serialize, serde::Deserialize)]
 pub enum ArenaSource {
     Active(SessionId),
-    Sandbox(Game),
+    Sandbox(SandboxState),
 }
 
 impl Default for ArenaSource {
     fn default() -> Self {
-        Self::Sandbox(Game::default())
+        Self::Sandbox(SandboxState::default())
     }
 }
 
@@ -72,7 +128,7 @@ impl ArenaSource {
     ) -> Option<ArenaVisuals> {
         match self {
             Self::Active(id) => {
-                let session = store.active_sessions.get_entry(id)?;
+                let session = store.sessions.get_entry(id)?;
                 let board = session.visuals(user_id, perspective);
                 let (bottom_player, top_player) = if board.perspective == Color::White {
                     ((session.white, Color::White), (session.black, Color::Black))
@@ -85,19 +141,19 @@ impl ArenaSource {
                     bottom_player: Some(bottom_player),
                 })
             }
-            Self::Sandbox(game) => Some(ArenaVisuals {
-                board: BoardVisuals::from_game(perspective, game),
-                top_player: None,
-                bottom_player: None,
+            Self::Sandbox(state) => Some(ArenaVisuals {
+                board: BoardVisuals::from_game(state.perspective, &state.game),
+                top_player: state.top_player(),
+                bottom_player: state.bottom_player(),
             }),
         }
     }
 
     pub fn handle_move(&mut self, from: Square, to: Square, promotion: Option<Piece>, ws: &mut Ws) {
         match self {
-            ArenaSource::Sandbox(game) => {
-                if let Some(mv) = game.find_move(from, to, promotion) {
-                    let _ = game.play_move(mv);
+            ArenaSource::Sandbox(state) => {
+                if let Some(mv) = state.game.find_move(from, to, promotion) {
+                    let _ = state.game.play_move(mv);
                 }
             }
             ArenaSource::Active(id) => {
@@ -130,7 +186,7 @@ impl ArenaSource {
     pub fn movement(&self, store: &Store, user_id: UserId) -> (bool, Option<Color>) {
         match self {
             Self::Active(id) => {
-                if let Some(session) = store.active_sessions.get_entry(id) {
+                if let Some(session) = store.sessions.get_entry(id) {
                     let color = if user_id == session.white {
                         Some(Color::White)
                     } else if user_id == session.black {
@@ -153,12 +209,114 @@ impl ArenaSource {
 
     pub fn needs_promotion(&self, from: Square, to: Square, store: &Store) -> bool {
         match self {
-            ArenaSource::Sandbox(game) => game.has_promotion_move(from, to),
+            ArenaSource::Sandbox(state) => state.game.has_promotion_move(from, to),
             ArenaSource::Active(id) => {
-                let Some(session) = store.active_sessions.get_entry(id) else {
+                let Some(session) = store.sessions.get_entry(id) else {
                     return false;
                 };
                 session.has_promotion_move(from, to)
+            }
+        }
+    }
+
+    pub fn captured_pieces<'a>(&'a self, store: &'a Store, color: Color) -> &'a [Piece] {
+        match self {
+            ArenaSource::Sandbox(state) => state.game.captured_pieces(color),
+            ArenaSource::Active(id) => {
+                let Some(session) = store.sessions.get_entry(id) else {
+                    return &[];
+                };
+                session.captured_pieces(color)
+            }
+        }
+    }
+
+    pub fn outcome(&self, store: &Store) -> Option<GameOutcome> {
+        match self {
+            ArenaSource::Active(id) => {
+                let session = store.sessions.get_entry(id)?;
+                session.game().outcome()
+            }
+            ArenaSource::Sandbox(state) => state.game.outcome(),
+        }
+    }
+
+    pub fn color_to_move(&self, store: &Store) -> Option<Color> {
+        match self {
+            ArenaSource::Active(id) => {
+                let session = store.sessions.get_entry(id)?;
+                Some(session.game().position().side_to_move)
+            }
+            ArenaSource::Sandbox(state) => Some(state.game.position().side_to_move),
+        }
+    }
+
+    pub fn actions(&self, store: &Store, user_id: UserId) -> ArenaActions {
+        match self {
+            Self::Sandbox(state) => {
+                let claimable = matches!(
+                    state.game.state(),
+                    GameState::DrawFiftyMoveClaimable | GameState::DrawRepetitionClaimable
+                );
+                ArenaActions {
+                    can_resign: false,
+                    can_offer_draw: false,
+                    can_accept_or_decline_draw: false,
+                    can_claim_draw: claimable,
+                }
+            }
+            Self::Active(id) => {
+                let Some(session) = store.sessions.get_entry(id) else {
+                    return ArenaActions::default();
+                };
+
+                if !session.is_ongoing() {
+                    return ArenaActions::default();
+                }
+
+                let my_color = if user_id == session.white {
+                    Color::White
+                } else if user_id == session.black {
+                    Color::Black
+                } else {
+                    return ArenaActions::default();
+                };
+                ArenaActions {
+                    can_resign: true,
+                    can_offer_draw: session.draw_offer() != Some(my_color),
+                    can_accept_or_decline_draw: session.draw_offer() == Some(my_color.opposite()),
+                    can_claim_draw: session.can_move(user_id) && {
+                        let state = session.game().state();
+                        matches!(
+                            state,
+                            GameState::DrawFiftyMoveClaimable | GameState::DrawRepetitionClaimable
+                        )
+                    },
+                }
+            }
+        }
+    }
+
+    pub fn handle_action(&mut self, action: MiscAction, store: &Store, ws: &mut Ws) {
+        match self {
+            ArenaSource::Sandbox(state) => match action {
+                MiscAction::ClaimDraw => {
+                    let _ = state.game.claim_draw();
+                }
+                MiscAction::Resign => {
+                    state.game.resign(state.game.position().side_to_move);
+                }
+                _ => {}
+            },
+            ArenaSource::Active(id) => {
+                let Some(session) = store.sessions.get_entry(id) else {
+                    return;
+                };
+                let mv = session.wrap_misc_action(action);
+                ws.send(ClientMessage::PlayMove {
+                    session_id: *id,
+                    mv,
+                });
             }
         }
     }
@@ -168,4 +326,12 @@ pub struct ArenaVisuals {
     pub board: BoardVisuals,
     pub top_player: Option<(UserId, Color)>,
     pub bottom_player: Option<(UserId, Color)>,
+}
+
+#[derive(Default)]
+pub struct ArenaActions {
+    pub can_resign: bool,
+    pub can_offer_draw: bool,
+    pub can_accept_or_decline_draw: bool,
+    pub can_claim_draw: bool,
 }
