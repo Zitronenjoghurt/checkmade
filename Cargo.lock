@@ -2331,7 +2331,7 @@ dependencies = [
 [[package]]
 name = "giga-chess"
 version = "0.10.0"
-source = "git+https://github.com/Zitronenjoghurt/giga-chess?branch=main#cc57e582706da881a92412ed7f58087dd334ab7d"
+source = "git+https://github.com/Zitronenjoghurt/giga-chess?branch=main#99aae8387f64edd02ed3dd55f9d299cd5824377b"
 dependencies = [
  "bitcode",
  "serde",
@@ -3350,9 +3350,9 @@ dependencies = [
 
 [[package]]
 name = "log"
-version = "0.4.29"
+version = "0.4.30"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5e5032e24019045c762d3c0f28f5b6b8bbf38563a65908389bf7978758920897"
+checksum = "616ec5685824bcc94416c6d4a7a446eea774a31efd7062c8480ba6fd06d7a6e5"
 
 [[package]]
 name = "loom"
@@ -4203,9 +4203,9 @@ checksum = "7c87def4c32ab89d880effc9e097653c8da5d6ef28e6b539d313baaacfbafcbe"
 
 [[package]]
 name = "orbclient"
-version = "0.3.54"
+version = "0.3.55"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a570f6bca41d29acb2139229a7c873ec99bc9a313bd10804081d89bfac8ff329"
+checksum = "5df339f526ea9a60e371768d50efc2f2508c7203290731565d1f7a6f71d21747"
 dependencies = [
  "libc",
  "libredox",

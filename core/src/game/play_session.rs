@@ -6,7 +6,7 @@ use crate::game::visuals::BoardVisuals;
 use crate::types::session_id::SessionId;
 use crate::types::session_status::SessionStatus;
 use crate::types::user_id::UserId;
-use giga_chess::prelude::{Color, GameOutcome, Session};
+use giga_chess::prelude::{Color, GameOutcome, Piece, Session};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "bitcode", derive(bitcode::Encode, bitcode::Decode))]
@@ -85,14 +85,31 @@ impl PlaySession {
     pub fn visuals(&self, user_id: UserId, color: Color) -> BoardVisuals {
         match &self.kind {
             PlaySessionKind::Normal(session) => {
-                if user_id == self.white {
-                    BoardVisuals::from_game(Color::White, session.game())
+                let perspective = if user_id == self.white {
+                    Color::White
                 } else if user_id == self.black {
-                    BoardVisuals::from_game(Color::Black, session.game())
+                    Color::Black
                 } else {
-                    BoardVisuals::from_game(color, session.game())
-                }
+                    color
+                };
+                BoardVisuals::from_game(perspective, session.game())
             }
+        }
+    }
+
+    pub fn captured_pieces(&self, color: Color) -> &[Piece] {
+        match &self.kind {
+            PlaySessionKind::Normal(session) => session.game().captured_pieces(color),
+        }
+    }
+
+    pub fn has_promotion_move(
+        &self,
+        from: giga_chess::prelude::Square,
+        to: giga_chess::prelude::Square,
+    ) -> bool {
+        match &self.kind {
+            PlaySessionKind::Normal(session) => session.game().has_promotion_move(from, to),
         }
     }
 }

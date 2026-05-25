@@ -35,6 +35,7 @@ no_ongoing_games: x
 no_session_requests: x
 ongoing_games: x
 opponent: x
+pawn_promotion: x
 pending: x
 public: x
 public_game_info: x

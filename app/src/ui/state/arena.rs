@@ -3,7 +3,7 @@ use crate::ws::Ws;
 use checkmade_core::game::play_move::PlayMove;
 use checkmade_core::game::visuals::BoardVisuals;
 use checkmade_core::giga_chess::prelude::action::SessionAction;
-use checkmade_core::giga_chess::prelude::{Color, Game, Square};
+use checkmade_core::giga_chess::prelude::{Color, Game, Piece, Square};
 use checkmade_core::messages::client::ClientMessage;
 use checkmade_core::types::session_id::SessionId;
 use checkmade_core::types::user_id::UserId;
@@ -14,6 +14,8 @@ pub struct ArenaState {
     pub subscribed_session: Option<SessionId>,
     pub perspective: Color,
     pub source: ArenaSource,
+    #[serde(skip, default)]
+    pub pending_promotion: Option<(Square, Square)>,
 }
 
 impl Default for ArenaState {
@@ -22,17 +24,18 @@ impl Default for ArenaState {
             subscribed_session: None,
             perspective: Color::White,
             source: ArenaSource::default(),
+            pending_promotion: None,
         }
     }
 }
 
 impl ArenaState {
-    pub fn visuals(&self, user_id: UserId, store: &Store) -> Option<BoardVisuals> {
+    pub fn visuals(&self, user_id: UserId, store: &Store) -> Option<ArenaVisuals> {
         self.source.visuals(user_id, self.perspective, store)
     }
 
-    pub fn handle_move(&mut self, from: Square, to: Square, ws: &mut Ws) {
-        self.source.handle_move(from, to, ws);
+    pub fn handle_move(&mut self, from: Square, to: Square, promotion: Option<Piece>, ws: &mut Ws) {
+        self.source.handle_move(from, to, promotion, ws);
     }
 
     pub fn has_session(&self, id: SessionId) -> bool {
@@ -41,6 +44,10 @@ impl ArenaState {
 
     pub fn session_id(&self) -> Option<SessionId> {
         self.source.session_id()
+    }
+
+    pub fn movement(&self, store: &Store, user_id: UserId) -> (bool, Option<Color>) {
+        self.source.movement(store, user_id)
     }
 }
 
@@ -62,23 +69,35 @@ impl ArenaSource {
         user_id: UserId,
         perspective: Color,
         store: &Store,
-    ) -> Option<BoardVisuals> {
+    ) -> Option<ArenaVisuals> {
         match self {
             Self::Active(id) => {
-                let Some(session) = store.active_sessions.get_entry(id) else {
-                    return None;
+                let session = store.active_sessions.get_entry(id)?;
+                let board = session.visuals(user_id, perspective);
+                let (bottom_player, top_player) = if board.perspective == Color::White {
+                    ((session.white, Color::White), (session.black, Color::Black))
+                } else {
+                    ((session.black, Color::Black), (session.white, Color::White))
                 };
-                Some(session.visuals(user_id, perspective))
+                Some(ArenaVisuals {
+                    board,
+                    top_player: Some(top_player),
+                    bottom_player: Some(bottom_player),
+                })
             }
-            Self::Sandbox(game) => Some(BoardVisuals::from_game(perspective, game)),
+            Self::Sandbox(game) => Some(ArenaVisuals {
+                board: BoardVisuals::from_game(perspective, game),
+                top_player: None,
+                bottom_player: None,
+            }),
         }
     }
 
-    pub fn handle_move(&mut self, from: Square, to: Square, ws: &mut Ws) {
+    pub fn handle_move(&mut self, from: Square, to: Square, promotion: Option<Piece>, ws: &mut Ws) {
         match self {
             ArenaSource::Sandbox(game) => {
-                if let Some(mv) = game.find_move(from, to, None) {
-                    game.play_move(mv).unwrap();
+                if let Some(mv) = game.find_move(from, to, promotion) {
+                    let _ = game.play_move(mv);
                 }
             }
             ArenaSource::Active(id) => {
@@ -87,7 +106,7 @@ impl ArenaSource {
                     mv: PlayMove::Normal(SessionAction::MoveFromTo {
                         from,
                         to,
-                        promotion: None,
+                        promotion,
                     }),
                 });
             }
@@ -107,4 +126,46 @@ impl ArenaSource {
             Self::Sandbox(_) => None,
         }
     }
+
+    pub fn movement(&self, store: &Store, user_id: UserId) -> (bool, Option<Color>) {
+        match self {
+            Self::Active(id) => {
+                if let Some(session) = store.active_sessions.get_entry(id) {
+                    let color = if user_id == session.white {
+                        Some(Color::White)
+                    } else if user_id == session.black {
+                        Some(Color::Black)
+                    } else {
+                        None
+                    };
+                    if color.is_some() {
+                        (session.can_move(user_id), color)
+                    } else {
+                        (false, None)
+                    }
+                } else {
+                    (false, None)
+                }
+            }
+            Self::Sandbox(_) => (true, None),
+        }
+    }
+
+    pub fn needs_promotion(&self, from: Square, to: Square, store: &Store) -> bool {
+        match self {
+            ArenaSource::Sandbox(game) => game.has_promotion_move(from, to),
+            ArenaSource::Active(id) => {
+                let Some(session) = store.active_sessions.get_entry(id) else {
+                    return false;
+                };
+                session.has_promotion_move(from, to)
+            }
+        }
+    }
+}
+
+pub struct ArenaVisuals {
+    pub board: BoardVisuals,
+    pub top_player: Option<(UserId, Color)>,
+    pub bottom_player: Option<(UserId, Color)>,
 }

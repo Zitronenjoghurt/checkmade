@@ -2,6 +2,7 @@ use crate::event::{AppEvent, ReconnectedEvent};
 use crate::ws::cache::FetchableCache;
 use crate::ws::fetchable::Fetchable;
 use checkmade_core::game::play_session::PlaySession;
+use checkmade_core::giga_chess::prelude::{Color, Piece};
 use checkmade_core::types::session_id::SessionId;
 use checkmade_core::types::session_request::{SessionRequest, SessionRequestId};
 use checkmade_core::types::user_id::UserId;
@@ -73,7 +74,10 @@ impl Store {
         self.public_session_requests.invalidate();
         self.users.invalidate();
     }
+}
 
+// Counts
+impl Store {
     pub fn friend_request_count(&self) -> usize {
         self.incoming_friend_requests
             .value
@@ -99,5 +103,15 @@ impl Store {
             .as_ref()
             .map(|v| v.values().filter(|s| s.can_move(me.public.id)).count())
             .unwrap_or(0)
+    }
+}
+
+// Session helpers
+impl Store {
+    pub fn session_captured_pieces(&self, session_id: SessionId, color: Color) -> &[Piece] {
+        let Some(session) = self.active_sessions.get_entry(&session_id) else {
+            return &[];
+        };
+        session.captured_pieces(color)
     }
 }

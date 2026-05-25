@@ -9,16 +9,42 @@ pub struct BoardVisuals {
     pub last_move_to: Option<Square>,
     pub perspective: Color,
     pub pieces: Vec<PieceVisuals>,
+    pub threat_targets: Vec<Square>,
+    pub threat_sources: Vec<Square>,
 }
 
 impl BoardVisuals {
     pub fn from_game(perspective: Color, game: &Game) -> Self {
         let last_move = game.history().last();
+
+        let mut threat_targets = Vec::new();
+        let mut threat_sources = Vec::new();
+
+        let white_threats = game.king_threats(Color::White);
+        if !white_threats.is_empty() {
+            let white_kings = game.position().board.piece_bb(Piece::King, Color::White);
+            for king in white_kings {
+                threat_targets.push(king);
+            }
+            threat_sources.extend(white_threats);
+        }
+
+        let black_threats = game.king_threats(Color::Black);
+        if !black_threats.is_empty() {
+            let black_kings = game.position().board.piece_bb(Piece::King, Color::Black);
+            for king in black_kings {
+                threat_targets.push(king);
+            }
+            threat_sources.extend(black_threats);
+        }
+
         Self {
             last_move_from: last_move.map(|mv| mv.from()),
             last_move_to: last_move.map(|mv| mv.to()),
             perspective,
             pieces: PieceVisuals::from_board(&game.position().board),
+            threat_targets,
+            threat_sources,
         }
     }
 }

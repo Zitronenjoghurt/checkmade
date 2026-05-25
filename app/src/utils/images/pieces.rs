@@ -73,3 +73,17 @@ pub fn build() -> ImageCache<(PieceSet, Piece, Color)> {
     }
     cache
 }
+
+pub fn build_icons() -> ImageCache<(Piece, Color)> {
+    let mut cache = ImageCache::new();
+    let assets = get_assets(PieceSet::Regular);
+    for piece in Piece::ALL {
+        for color in Color::ALL {
+            cache.insert(
+                (piece, color),
+                ImageSource::from_bytes(assets.get(piece, color)),
+            );
+        }
+    }
+    cache
+}

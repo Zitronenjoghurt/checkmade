@@ -260,9 +260,18 @@ impl WebsocketConnection {
 
         self.send_to_user(
             session.white.into(),
-            ServerMessage::SessionStart(session.clone()),
+            ServerMessage::SessionStart {
+                session: session.clone(),
+                request_id: session_request_id.into(),
+            },
         );
-        self.send_to_user(session.black.into(), ServerMessage::SessionStart(session));
+        self.send_to_user(
+            session.black.into(),
+            ServerMessage::SessionStart {
+                session,
+                request_id: session_request_id.into(),
+            },
+        );
 
         Ok(())
     }

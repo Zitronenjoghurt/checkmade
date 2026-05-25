@@ -200,8 +200,13 @@ impl Checkmade {
                     }
                 }
             }
-            ServerMessage::SessionStart(session) => {
+            ServerMessage::SessionStart {
+                session,
+                request_id,
+            } => {
                 self.store.active_sessions.insert(session.id, session);
+                self.store.incoming_session_requests.remove(&request_id);
+                self.store.outgoing_session_requests.remove(&request_id);
             }
             ServerMessage::SessionRequest(request) => {
                 if let Some(me) = &self.store.me.value {

@@ -36,6 +36,7 @@ no_session_requests: Keine Sitzungsanfragen
 ongoing_games: Laufende Spiele
 opponent: Gegner
 pending: Ausstehend
+pawn_promotion: Bauernumwandlung
 public: Öffentlich
 public_game_info: Öffentliche Spiele können von jedem Spieler beigetreten und angesehen werden.
 public_games: Öffentliche Spiele

@@ -35,6 +35,7 @@ no_ongoing_games: No ongoing games
 no_session_requests: No session requests
 ongoing_games: Ongoing games
 opponent: Opponent
+pawn_promotion: Pawn promotion
 pending: Pending
 public: Public
 public_game_info: Public games can be joined and viewed by anyone.

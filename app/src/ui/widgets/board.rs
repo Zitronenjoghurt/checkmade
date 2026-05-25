@@ -22,9 +22,13 @@ pub struct BoardWidget<'a> {
     vis: &'a BoardVisuals,
     id: Id,
     size: f32,
+    can_move: bool,
+    move_restriction: Option<Color>,
     light_color: Color32,
     dark_color: Color32,
     highlight_color: Color32,
+    threat_target_color: Color32,
+    threat_source_color: Color32,
 }
 
 impl<'a> BoardWidget<'a> {
@@ -34,14 +38,28 @@ impl<'a> BoardWidget<'a> {
             vis,
             id: id.into(),
             size: 100.0,
+            can_move: false,
+            move_restriction: None,
             light_color: Color32::from_rgb(240, 217, 181),
             dark_color: Color32::from_rgb(181, 136, 99),
-            highlight_color: Color32::from_rgba_premultiplied(100, 180, 80, 100),
+            highlight_color: Color32::from_rgba_premultiplied(145, 130, 50, 75),
+            threat_target_color: Color32::from_rgba_premultiplied(210, 45, 35, 200),
+            threat_source_color: Color32::from_rgba_premultiplied(200, 50, 40, 140),
         }
     }
 
     pub fn size(mut self, size: f32) -> Self {
         self.size = size;
+        self
+    }
+
+    pub fn can_move(mut self, can_move: bool) -> Self {
+        self.can_move = can_move;
+        self
+    }
+
+    pub fn move_restriction(mut self, restriction: Option<Color>) -> Self {
+        self.move_restriction = restriction;
         self
     }
 
@@ -57,6 +75,16 @@ impl<'a> BoardWidget<'a> {
 
     pub fn highlight_color(mut self, color: Color32) -> Self {
         self.highlight_color = color;
+        self
+    }
+
+    pub fn threat_target_color(mut self, color: Color32) -> Self {
+        self.threat_target_color = color;
+        self
+    }
+
+    pub fn threat_source_color(mut self, color: Color32) -> Self {
+        self.threat_source_color = color;
         self
     }
 
@@ -115,6 +143,17 @@ impl<'a> BoardWidget<'a> {
         })
     }
 
+    fn can_interact_with(&self, sq: Square) -> bool {
+        if !self.can_move {
+            return false;
+        }
+        match (self.piece_at_square(sq), self.move_restriction) {
+            (Some((_, piece_color)), Some(allowed)) => piece_color == allowed,
+            (Some(_), None) => true,
+            (None, _) => false,
+        }
+    }
+
     fn process_input(
         &self,
         ui: &Ui,
@@ -133,7 +172,7 @@ impl<'a> BoardWidget<'a> {
 
         if response.drag_started()
             && let Some(sq) = hover_sq
-            && self.piece_at_square(sq).is_some()
+            && self.can_interact_with(sq)
         {
             state = BoardInteraction::Dragging(sq);
         }
@@ -152,7 +191,7 @@ impl<'a> BoardWidget<'a> {
             match state {
                 BoardInteraction::Idle => {
                     if let Some(sq) = hover_sq
-                        && self.piece_at_square(sq).is_some()
+                        && self.can_interact_with(sq)
                     {
                         state = BoardInteraction::Selected(sq);
                     }
@@ -205,11 +244,17 @@ impl<'a> BoardWidget<'a> {
         );
     }
 
-    fn paint_highlight(&self, painter: &egui::Painter, board_rect: &Rect, square: Square) {
+    fn paint_highlight(
+        &self,
+        painter: &egui::Painter,
+        board_rect: &Rect,
+        square: Square,
+        color: Color32,
+    ) {
         let cell = board_rect.width() / 8.0;
         let center = self.square_to_screen(square, board_rect);
         let rect = Rect::from_center_size(center, Vec2::splat(cell));
-        painter.rect_filled(rect, 0.0, self.highlight_color);
+        painter.rect_filled(rect, 0.0, color);
     }
 
     fn paint_pieces(
@@ -378,16 +423,31 @@ impl<'a> egui::Widget for BoardWidget<'a> {
 
             match interaction {
                 BoardInteraction::Selected(sq) | BoardInteraction::Dragging(sq) => {
-                    self.paint_highlight(&painter, &rect, sq);
+                    self.paint_highlight(&painter, &rect, sq, self.highlight_color);
                 }
                 _ => {}
             }
 
-            if let Some(from) = self.vis.last_move_from {
-                self.paint_highlight(&painter, &rect, from);
+            if let Some(from) = self.vis.last_move_from
+                && !self.vis.threat_sources.contains(&from)
+                && !self.vis.threat_targets.contains(&from)
+            {
+                self.paint_highlight(&painter, &rect, from, self.highlight_color);
             }
-            if let Some(to) = self.vis.last_move_to {
-                self.paint_highlight(&painter, &rect, to);
+
+            if let Some(to) = self.vis.last_move_to
+                && !self.vis.threat_sources.contains(&to)
+                && !self.vis.threat_targets.contains(&to)
+            {
+                self.paint_highlight(&painter, &rect, to, self.highlight_color);
+            }
+
+            for sq in &self.vis.threat_sources {
+                self.paint_highlight(&painter, &rect, *sq, self.threat_source_color);
+            }
+
+            for sq in &self.vis.threat_targets {
+                self.paint_highlight(&painter, &rect, *sq, self.threat_target_color);
             }
 
             self.paint_pieces(ui, &rect, interaction, &response);

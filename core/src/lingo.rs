@@ -38,6 +38,7 @@ pub enum Lingo {
     NoSessionRequests,
     OngoingGames,
     Opponent,
+    PawnPromotion,
     Pending,
     Public,
     PublicGameInfo,

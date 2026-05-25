@@ -5,6 +5,7 @@ pub mod friends;
 pub mod games;
 pub mod generic_multi_select;
 pub mod generic_select;
+mod piece_icons;
 pub mod profile_menu;
 pub mod reset_slider;
 pub mod session;
