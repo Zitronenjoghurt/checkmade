@@ -1,6 +1,7 @@
 use crate::event::{AppEvent, ReconnectedEvent};
 use crate::ws::cache::FetchableCache;
 use crate::ws::fetchable::Fetchable;
+use crate::ws::Ws;
 use checkmade_core::game::play_session::PlaySession;
 use checkmade_core::giga_chess::prelude::{Color, Piece};
 use checkmade_core::types::session_id::SessionId;
@@ -19,6 +20,7 @@ pub struct Store {
     pub outgoing_session_requests: Fetchable<HashMap<SessionRequestId, SessionRequest>>,
     pub public_session_requests: Fetchable<HashMap<SessionRequestId, SessionRequest>>,
     pub users: FetchableCache<UserId, PublicUserInfo>,
+    has_session_history: bool,
 }
 
 impl Default for Store {
@@ -33,6 +35,7 @@ impl Default for Store {
             outgoing_session_requests: Fetchable::new(),
             public_session_requests: Fetchable::new(),
             users: FetchableCache::new().with_fetch_cooldown(web_time::Duration::from_millis(200)),
+            has_session_history: false,
         }
     }
 }
@@ -70,6 +73,13 @@ impl Store {
         self.outgoing_session_requests.invalidate();
         self.public_session_requests.invalidate();
         self.users.invalidate();
+    }
+
+    pub fn ensure_session_history(&mut self, ws: &mut Ws) {
+        if !self.has_session_history {
+            ws.request_session_history();
+            self.has_session_history = true;
+        }
     }
 }
 

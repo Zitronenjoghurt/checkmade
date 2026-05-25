@@ -5,6 +5,7 @@ use strum::EnumIter;
 
 pub mod bar;
 pub mod create;
+pub mod history;
 pub mod incoming;
 pub mod ongoing;
 pub mod outgoing;
@@ -15,6 +16,7 @@ pub mod outgoing;
 pub enum GamesTab {
     #[default]
     Ongoing,
+    History,
     Create,
     Incoming,
     Outgoing,
@@ -26,6 +28,7 @@ impl GamesTab {
     pub fn title(&self) -> String {
         match self {
             Self::Ongoing => OngoingGames.t().to_string(),
+            Self::History => History.t().to_string(),
             Self::Create => Create.t().to_string(),
             Self::Incoming => Requests.t().to_string(),
             Self::Outgoing => Pending.t().to_string(),
@@ -37,6 +40,7 @@ impl GamesTab {
     pub fn icon(&self) -> &'static str {
         match self {
             Self::Ongoing => icons::CROWN,
+            Self::History => icons::CLOCK_COUNTER_CLOCKWISE,
             Self::Create => icons::PLUS_SQUARE,
             Self::Incoming => icons::ENVELOPE,
             Self::Outgoing => icons::TRAY_ARROW_UP,

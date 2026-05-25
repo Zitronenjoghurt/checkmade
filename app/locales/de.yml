@@ -36,6 +36,7 @@ games: Spiele
 game_mode: Spielmodus
 game_mode_standard: Standard
 general: Allgemein
+history: Historie
 insufficient_material: Unzureichendes Material
 last_turn: Letzter Zug
 latency: Latenz
@@ -46,6 +47,7 @@ modal_remove_friend_body: 'Willst du %{x} wirklich als freund entfernen?'
 no_friends: Keine Freunde
 no_friend_requests: Keine Freundschaftsanfragen
 no_ongoing_games: Keine laufenden Spiele
+no_past_games: Keine vergangenen Spiele
 no_session_requests: Keine Sitzungsanfragen
 offer_draw: Unentschieden anbieten
 offer_draw_info: Du bietest dem Gegner an, das Spiel im Unentschieden zu beenden.

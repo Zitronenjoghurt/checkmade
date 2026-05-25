@@ -1,7 +1,7 @@
 use checkmade_core::giga_chess::prelude::{Color, Game};
 use checkmade_core::types::user_id::UserId;
 
-#[derive(Default, serde::Serialize, serde::Deserialize)]
+#[derive(Default, Clone, serde::Serialize, serde::Deserialize)]
 pub struct SandboxState {
     pub game: Game,
     pub black_id: Option<UserId>,

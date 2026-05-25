@@ -3,7 +3,7 @@ use crate::ui::widgets::games::GamesTab;
 use checkmade_core::types::session_request::CreateSessionRequest;
 
 pub mod arena;
-mod sandbox;
+pub mod sandbox;
 pub mod settings;
 
 #[derive(Default, serde::Serialize, serde::Deserialize)]

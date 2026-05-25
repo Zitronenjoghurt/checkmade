@@ -244,4 +244,8 @@ impl Ws {
     pub fn request_session(&mut self, id: SessionId) {
         self.send(ClientMessage::Session(id));
     }
+
+    pub fn request_session_history(&mut self) {
+        self.send(ClientMessage::SessionHistory);
+    }
 }

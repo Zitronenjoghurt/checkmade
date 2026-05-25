@@ -197,6 +197,11 @@ impl Checkmade {
                     self.store.sessions.insert(session.id, session);
                 }
             }
+            ServerMessage::Sessions(sessions) => {
+                for session in sessions {
+                    self.store.sessions.insert(session.id, session);
+                }
+            }
             ServerMessage::SessionStart {
                 session,
                 request_id,
@@ -394,6 +399,11 @@ impl Checkmade {
             } else {
                 self.ui.arena.source = ArenaSource::Active(id);
             }
+            self.open_tab(Tab::Arena);
+        }
+
+        for OpenSandboxEvent(state) in OpenSandboxEvent::recv(ctx) {
+            self.ui.arena.source = ArenaSource::Sandbox(state);
             self.open_tab(Tab::Arena);
         }
     }

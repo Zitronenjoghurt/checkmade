@@ -1,3 +1,4 @@
+use crate::ui::state::sandbox::SandboxState;
 use checkmade_core::types::session_id::SessionId;
 use std::any::TypeId;
 use std::collections::HashSet;
@@ -117,3 +118,7 @@ impl AppEvent for ReconnectedEvent {}
 #[derive(Clone)]
 pub struct OpenSessionEvent(pub SessionId);
 impl AppEvent for OpenSessionEvent {}
+
+#[derive(Clone)]
+pub struct OpenSandboxEvent(pub SandboxState);
+impl AppEvent for OpenSandboxEvent {}

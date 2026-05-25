@@ -36,6 +36,7 @@ games: Games
 game_mode: Game mode
 game_mode_standard: Standard
 general: General
+history: History
 insufficient_material: Insufficient material
 last_turn: Last turn
 latency: Latency
@@ -46,6 +47,7 @@ modal_remove_friend_body: 'Do you really want to remove %{x} from your friends l
 no_friends: No friends
 no_friend_requests: No friend requests
 no_ongoing_games: No ongoing games
+no_past_games: No past games
 no_session_requests: No session requests
 offer_draw: Offer draw
 offer_draw_info: You offer the opponent to end the game in a draw.

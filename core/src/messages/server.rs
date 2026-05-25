@@ -35,6 +35,7 @@ pub enum ServerMessage {
     PublicSessionRequests(Vec<SessionRequest>),
     PublicUserInfo(PublicUserInfo),
     Session(PlaySession),
+    Sessions(Vec<PlaySession>),
     SessionStart {
         session: PlaySession,
         request_id: SessionRequestId,
@@ -88,6 +89,7 @@ impl ServerMessage {
             Self::PrivateUserInfo(_) => "private_user_info",
             Self::PublicUserInfo(_) => "public_user_info",
             Self::Session(_) => "session",
+            Self::Sessions(_) => "sessions",
             Self::SessionStart { .. } => "session_start",
             Self::SessionRequest(_) => "session_request",
             Self::SessionRequestCreateOk(_) => "session_request_create_ok",

@@ -2,6 +2,7 @@ use crate::i18n::Translatable;
 use crate::ui::tabs::TabViewer;
 use crate::ui::widgets::games::bar::GamesBar;
 use crate::ui::widgets::games::create::GamesCreate;
+use crate::ui::widgets::games::history::GamesHistory;
 use crate::ui::widgets::games::incoming::GamesIncoming;
 use crate::ui::widgets::games::ongoing::GamesOngoing;
 use crate::ui::widgets::games::outgoing::GamesOutgoing;
@@ -26,6 +27,9 @@ pub fn show(v: &mut TabViewer, ui: &mut egui::Ui) {
                 match v.state.games_tab {
                     GamesTab::Ongoing => {
                         GamesOngoing::new(v.server_time, v.store).ui(ui);
+                    }
+                    GamesTab::History => {
+                        GamesHistory::new(v.server_time, v.store, v.ws).ui(ui);
                     }
                     GamesTab::Create => {
                         GamesCreate::new(&mut v.state.session_create, v.store, v.ws).ui(ui);

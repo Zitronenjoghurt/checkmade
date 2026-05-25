@@ -205,6 +205,7 @@ impl WebsocketConnection {
                 self.handle_send_friend_request(&friend_code).await
             }
             ClientMessage::Session(session_id) => self.handle_session(session_id.into()).await,
+            ClientMessage::SessionHistory => self.handle_session_history().await,
             ClientMessage::SessionRequest(request_id) => {
                 self.handle_session_request(request_id.into()).await
             }
@@ -608,6 +609,18 @@ impl WebsocketConnection {
             return Err(ServerError::Core(DomainError::SessionNotFound.into()));
         };
         self.respond(ServerMessage::Session(session));
+        Ok(())
+    }
+
+    async fn handle_session_history(&self) -> ServerResult<()> {
+        // ToDo: Support pagination in frontend and do filtering and stuff
+        let page = self
+            .state
+            .service
+            .session
+            .user_page(self.user_id, None, 1000, 0)
+            .await?;
+        self.respond(ServerMessage::Sessions(page.items));
         Ok(())
     }
 
