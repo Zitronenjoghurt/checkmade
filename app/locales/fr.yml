@@ -17,6 +17,9 @@ connection_lost: x
 confirm: d'acc
 copied_to_clipboard: x
 create: x
+custom_time: x
+daily_mode: x
+days: x
 decline_draw: x
 decline_draw_info: x
 disconnected: x
@@ -37,11 +40,14 @@ game_mode: x
 game_mode_standard: x
 general: x
 history: x
+hours: x
+increment: x
 insufficient_material: x
 last_turn: x
 latency: x
 list: x
 logout: x
+minute_short: x
 modal_remove_friend_title: x
 modal_remove_friend_body: 'Do you really want to remove %{x} from your friends list?'
 no_friends: x
@@ -66,6 +72,7 @@ resign: x
 resign_info: x
 resignation: x
 sandbox: x
+second_short: x
 server_time: x
 session_request_created: x
 session_request_declined: x
@@ -74,11 +81,14 @@ settings: x
 seventy_five_move_rule: x
 stalemate: x
 threefold_repetition: x
+time: x
+time_control: x
 timeout: x
 timeout_vs_insufficient: x
 turn: x
 turns: x
 ui_scale: x
+unlimited: x
 waiting_for_opponent: x
 white: x
 x_ago: '%{x} x'

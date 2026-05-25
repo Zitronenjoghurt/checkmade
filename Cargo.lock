@@ -2331,7 +2331,7 @@ dependencies = [
 [[package]]
 name = "giga-chess"
 version = "0.10.0"
-source = "git+https://github.com/Zitronenjoghurt/giga-chess?branch=main#99aae8387f64edd02ed3dd55f9d299cd5824377b"
+source = "git+https://github.com/Zitronenjoghurt/giga-chess?branch=main#5b07612c4926e07995ed7db93fc568d7b76a8193"
 dependencies = [
  "bitcode",
  "serde",

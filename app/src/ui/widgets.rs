@@ -13,5 +13,6 @@ mod session_config;
 mod session_config_data;
 mod session_request_create;
 pub mod settings;
+mod time_control;
 mod validated_input;
 pub mod with_badge;

@@ -139,7 +139,20 @@ impl PlaySession {
                 MiscAction::AcceptDraw => PlayMove::Normal(SessionAction::AcceptDraw),
                 MiscAction::DeclineDraw => PlayMove::Normal(SessionAction::DeclineDraw),
                 MiscAction::ClaimDraw => PlayMove::Normal(SessionAction::ClaimDraw),
+                MiscAction::ClaimTimeout => PlayMove::Normal(SessionAction::ClaimTimeout),
             },
+        }
+    }
+
+    pub fn time_left(&self, color: Color, now_ms: u64) -> Option<u64> {
+        match &self.kind {
+            PlaySessionKind::Normal(session) => Some(session.clock()?.remaining_ms(color, now_ms)),
+        }
+    }
+
+    pub fn increment_ms(&self, color: Color) -> Option<u64> {
+        match &self.kind {
+            PlaySessionKind::Normal(session) => Some(session.clock()?.increment_ms(color)),
         }
     }
 }

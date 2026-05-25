@@ -105,6 +105,10 @@ impl ArenaState {
     pub fn handle_action(&mut self, action: MiscAction, store: &Store, ws: &mut Ws) {
         self.source.handle_action(action, store, ws);
     }
+
+    pub fn time(&self, store: &Store, color: Color, now_ms: u64) -> Option<(u64, u64)> {
+        self.source.time(store, color, now_ms)
+    }
 }
 
 #[derive(serde::Serialize, serde::Deserialize)]
@@ -318,6 +322,21 @@ impl ArenaSource {
                     mv,
                 });
             }
+        }
+    }
+
+    pub fn time(&self, store: &Store, color: Color, now_ms: u64) -> Option<(u64, u64)> {
+        match self {
+            Self::Active(id) => {
+                let Some(session) = store.sessions.get_entry(id) else {
+                    return None;
+                };
+                Some((
+                    session.time_left(color, now_ms)?,
+                    session.increment_ms(color)?,
+                ))
+            }
+            Self::Sandbox(_) => None,
         }
     }
 }

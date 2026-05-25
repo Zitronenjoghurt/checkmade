@@ -10,7 +10,7 @@ use crate::utils::fmt::{fmt_color, fmt_outcome};
 use crate::utils::images::Images;
 use crate::ws::Ws;
 use checkmade_core::game::misc_action::MiscAction;
-use checkmade_core::giga_chess::prelude::Piece;
+use checkmade_core::giga_chess::prelude::{Color, Piece};
 use checkmade_core::lingo::Lingo::*;
 use egui::RichText;
 
@@ -18,6 +18,7 @@ mod user;
 
 pub struct ArenaWidget<'a> {
     images: &'a mut Images,
+    server_time: &'a crate::server_time::ServerTime,
     state: &'a mut ArenaState,
     store: &'a mut Store,
     ws: &'a mut Ws,
@@ -26,12 +27,14 @@ pub struct ArenaWidget<'a> {
 impl<'a> ArenaWidget<'a> {
     pub fn new(
         images: &'a mut Images,
+        server_time: &'a crate::server_time::ServerTime,
         state: &'a mut ArenaState,
         store: &'a mut Store,
         ws: &'a mut Ws,
     ) -> Self {
         Self {
             images,
+            server_time,
             state,
             store,
             ws,
@@ -79,7 +82,7 @@ impl<'a> ArenaWidget<'a> {
             MiscAction::OfferDraw => (OfferDraw, OfferDrawInfo),
             MiscAction::AcceptDraw => (AcceptDraw, AcceptDrawInfo),
             MiscAction::DeclineDraw => (DeclineDraw, DeclineDrawInfo),
-            MiscAction::ClaimDraw => (ClaimDraw, ClaimDrawInfo),
+            MiscAction::ClaimDraw | MiscAction::ClaimTimeout => (ClaimDraw, ClaimDrawInfo),
         };
 
         let mut confirmed = false;
@@ -159,10 +162,34 @@ impl<'a> ArenaWidget<'a> {
             }
         });
     }
+
+    fn check_for_timeout_claim(&mut self, ui: &mut egui::Ui, now_ms: u64) {
+        if let Some(session_id) = self.state.session_id() {
+            let memory_id = ui.id().with("timeout_claimed").with(session_id);
+            let last_claim_ms = ui.data(|d| d.get_temp::<u64>(memory_id).unwrap_or(0));
+            if now_ms.saturating_sub(last_claim_ms) > 5000
+                && self.state.outcome(self.store).is_none()
+            {
+                for color in [Color::White, Color::Black] {
+                    if let Some((time_ms, _)) = self.state.time(self.store, color, now_ms)
+                        && time_ms == 0
+                    {
+                        ui.data_mut(|d| d.insert_temp(memory_id, now_ms));
+                        self.state
+                            .handle_action(MiscAction::ClaimTimeout, self.store, self.ws);
+                        break;
+                    }
+                }
+            }
+        }
+    }
 }
 
 impl egui::Widget for ArenaWidget<'_> {
-    fn ui(self, ui: &mut egui::Ui) -> egui::Response {
+    fn ui(mut self, ui: &mut egui::Ui) -> egui::Response {
+        let now_ms = self.server_time.now();
+        self.check_for_timeout_claim(ui, now_ms);
+
         let Some(me_id) = self.store.me.value.as_ref().map(|v| v.public.id) else {
             return ui.spinner();
         };
@@ -208,7 +235,7 @@ impl egui::Widget for ArenaWidget<'_> {
             let board_size = available_w.min(budget_for_board).max(0.0);
 
             if let Some((user_id, color)) = visuals.top_player {
-                ArenaUser::new(self.state, user_id, color, self.images, self.store)
+                ArenaUser::new(self.state, user_id, color, now_ms, self.images, self.store)
                     .width(board_size - 14.0)
                     .ui(ui);
             }
@@ -221,7 +248,7 @@ impl egui::Widget for ArenaWidget<'_> {
                 .ui(ui);
 
             if let Some((user_id, color)) = visuals.bottom_player {
-                ArenaUser::new(self.state, user_id, color, self.images, self.store)
+                ArenaUser::new(self.state, user_id, color, now_ms, self.images, self.store)
                     .width(board_size - 14.0)
                     .ui(ui);
             }

@@ -55,3 +55,35 @@ pub fn fmt_outcome(outcome: &GameOutcome) -> String {
         }
     }
 }
+
+pub fn fmt_clock(time_ms: u64, increment_ms: u64) -> String {
+    let total_seconds = time_ms / 1_000;
+
+    let days = total_seconds / 86_400;
+    let hours = (total_seconds % 86_400) / 3_600;
+    let minutes = (total_seconds % 3_600) / 60;
+    let seconds = total_seconds % 60;
+    let tenths = (time_ms % 1_000) / 100;
+
+    if days > 0 {
+        // Daily / Correspondence mode
+        // Output: "3d 14h +12h"
+        let inc_hours = increment_ms / 36_000_000; // ms to hours
+        format!("{}d {:02}h +{}h", days, hours, inc_hours)
+    } else if hours > 0 {
+        // Classical / Long time controls
+        // Output: "1:15:30 +30"
+        let inc_secs = increment_ms / 1_000;
+        format!("{}:{:02}:{:02} +{}", hours, minutes, seconds, inc_secs)
+    } else if minutes > 0 || seconds >= 10 {
+        // Standard Blitz / Rapid
+        // Output: "5:00 +3"
+        let inc_secs = increment_ms / 1_000;
+        format!("{}:{:02} +{}", minutes, seconds, inc_secs)
+    } else {
+        // Time Scramble! (Under 10 seconds)
+        // Output: "9.5 +2"
+        let inc_secs = increment_ms / 1_000;
+        format!("{}.{} +{}", seconds, tenths, inc_secs)
+    }
+}

@@ -30,6 +30,7 @@ impl<'a> egui::Widget for SessionRequestCreate<'a> {
 
         ui.vertical(|ui| {
             SessionConfigDataWidget::new(&mut self.request.config).ui(ui);
+            ui.separator();
             if !self.request.public {
                 GenericSelect::new_optional(
                     &mut self.request.opponent_id,

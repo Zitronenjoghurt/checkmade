@@ -17,6 +17,9 @@ connection_lost: Connection lost
 confirm: Confirm
 copied_to_clipboard: Copied to clipboard
 create: Create
+custom_time: Custom time
+daily_mode: Daily mode
+days: Days
 decline_draw: Decline draw
 decline_draw_info: "You decline the opponent's request and the game continues."
 disconnected: Disconnected
@@ -37,11 +40,14 @@ game_mode: Game mode
 game_mode_standard: Standard
 general: General
 history: History
+hours: Hours
+increment: Increment
 insufficient_material: Insufficient material
 last_turn: Last turn
 latency: Latency
 list: List
 logout: Logout
+minute_short: Min
 modal_remove_friend_title: Remove friend
 modal_remove_friend_body: 'Do you really want to remove %{x} from your friends list?'
 no_friends: No friends
@@ -66,6 +72,7 @@ resign: Resign
 resign_info: You resign and your opponent wins.
 resignation: Resignation
 sandbox: Sandbox
+second_short: Sec
 server_time: Server Time
 session_request_created: Session request created
 session_request_declined: Session request declined
@@ -74,11 +81,14 @@ settings: Settings
 seventy_five_move_rule: 75-move rule
 stalemate: Stalemate
 threefold_repetition: Threefold repetition
+time: Time
+time_control: Time control
 timeout: Timeout
 timeout_vs_insufficient: Timeout vs insufficient material
 turn: Turn
 turns: Turns
 ui_scale: UI Scale
+unlimited: Unlimited
 waiting_for_opponent: Waiting for opponent
 white: White
 x_ago: '%{x} ago'

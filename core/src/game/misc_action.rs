@@ -7,4 +7,5 @@ pub enum MiscAction {
     AcceptDraw,
     DeclineDraw,
     ClaimDraw,
+    ClaimTimeout,
 }
