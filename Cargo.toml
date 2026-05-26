@@ -2,9 +2,14 @@
 resolver = "3"
 members = ["app", "core", "server"]
 
+[workspace.package]
+version = "0.1.0-alpha.2"
+license = "MIT"
+edition = "2024"
+
 [workspace.dependencies]
 checkmade-core = { path = "core" }
-giga-chess = { git = "https://github.com/Zitronenjoghurt/giga-chess", branch = "main" }
+giga-chess = { git = "https://github.com/Zitronenjoghurt/giga-chess", rev = "fe6fa5ada20d5ae53fad8cebd3e6d374d7603e4c" }
 anyhow = "1.0.102"
 bitcode = "0.6.9"
 serde = { version = "1.0.228", features = ["derive"] }

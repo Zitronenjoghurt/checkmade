@@ -19,6 +19,7 @@ mod user;
 pub struct ArenaWidget<'a> {
     images: &'a mut Images,
     server_time: &'a crate::server_time::ServerTime,
+    settings: &'a crate::ui::state::settings::Settings,
     state: &'a mut ArenaState,
     store: &'a mut Store,
     ws: &'a mut Ws,
@@ -28,6 +29,7 @@ impl<'a> ArenaWidget<'a> {
     pub fn new(
         images: &'a mut Images,
         server_time: &'a crate::server_time::ServerTime,
+        settings: &'a crate::ui::state::settings::Settings,
         state: &'a mut ArenaState,
         store: &'a mut Store,
         ws: &'a mut Ws,
@@ -35,6 +37,7 @@ impl<'a> ArenaWidget<'a> {
         Self {
             images,
             server_time,
+            settings,
             state,
             store,
             ws,
@@ -241,11 +244,14 @@ impl egui::Widget for ArenaWidget<'_> {
             }
 
             let (can_move, restriction) = self.state.movement(self.store, me_id);
-            BoardWidget::new(self.images, &board_visuals, "arena_board")
+            let mut board = BoardWidget::new(self.images, &board_visuals, "arena_board")
                 .size(board_size)
                 .can_move(can_move)
-                .move_restriction(restriction)
-                .ui(ui);
+                .move_restriction(restriction);
+            if self.settings.display_legal_targets {
+                board = board.legal_targets_fn(|sq| self.state.legal_targets(sq, self.store));
+            }
+            board.ui(ui);
 
             if let Some((user_id, color)) = visuals.bottom_player {
                 ArenaUser::new(self.state, user_id, color, now_ms, self.images, self.store)

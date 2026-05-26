@@ -14,6 +14,8 @@ mod ws;
 
 pub use app::Checkmade;
 
+pub const VERSION: &str = env!("CARGO_PKG_VERSION");
+
 #[cfg(target_arch = "wasm32")]
 pub fn get_ws_url() -> String {
     let window = web_sys::window().expect("Failed to get browser window");

@@ -10,7 +10,7 @@ use checkmade_core::game::play_move::PlayMove;
 use checkmade_core::messages::client::ClientMessage;
 use checkmade_core::messages::server::ServerMessage;
 use checkmade_core::types::friend_info::{FriendInfo, FriendRequestInfo};
-use checkmade_core::types::session_request::{CreateSessionRequest, SessionRequest};
+use checkmade_core::types::session_request::CreateSessionRequest;
 use checkmade_core::types::session_status::SessionStatus;
 use futures_util::stream::SplitStream;
 use futures_util::StreamExt;

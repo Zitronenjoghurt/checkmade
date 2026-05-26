@@ -7,6 +7,7 @@ attempting_reconnect: x
 black: x
 cancel: x
 categories: x
+changelog: x
 checkmate: x
 claim_draw: x
 claim_draw_info: x
@@ -23,6 +24,7 @@ days: x
 decline_draw: x
 decline_draw_info: x
 disconnected: x
+display_legal_targets: x
 draw_by_x: x
 fetching_user_info: x
 fivefold_repetition: x

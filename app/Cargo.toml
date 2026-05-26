@@ -1,7 +1,8 @@
 [package]
 name = "checkmade-app"
-version = "0.1.0"
-edition = "2024"
+version.workspace = true
+license.workspace = true
+edition.workspace = true
 
 [package.metadata.docs.rs]
 all-features = true
@@ -9,12 +10,11 @@ targets = ["wasm32-unknown-unknown"]
 
 [dependencies]
 checkmade-core = { workspace = true, features = ["bitcode", "serde"] }
-anyhow = { workspace = true }
 chrono = "0.4.44"
 eframe = { version = "0.34.2", default-features = false, features = ["persistence"] }
 egui = "0.34.2"
+egui_commonmark = "0.23.0"
 egui_dock = { version = "0.19.1", features = ["serde"] }
-egui_extras = "0.34.2"
 egui-notify = "0.22.0"
 egui-phosphor = { version = "0.12.0", features = ["regular"] }
 ehttp = "0.7.1"

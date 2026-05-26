@@ -1,7 +1,8 @@
 [package]
 name = "checkmade-core"
-version = "0.1.0"
-edition = "2024"
+version.workspace = true
+license.workspace = true
+edition.workspace = true
 
 [features]
 data = ["async-trait", "brotli", "fastrand", "futures", "migration", "nanoid", "petname", "rmp-serde", "sea-orm", "serde"]

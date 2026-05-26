@@ -322,7 +322,7 @@ impl FriendshipStore {
             .select_only()
             .column(friendship::Column::RequesterId)
             .column(friendship::Column::AddresseeId)
-            .column(friendship::Column::CreatedAt)
+            .column(friendship::Column::UpdatedAt)
             .column_as(
                 Expr::cust_with_expr("COALESCE(SUM($1), 0)", Self::wins_case(user_id)),
                 "times_won",
@@ -338,7 +338,7 @@ impl FriendshipStore {
             .filter(accepted_filter)
             .group_by(friendship::Column::RequesterId)
             .group_by(friendship::Column::AddresseeId)
-            .group_by(friendship::Column::CreatedAt)
+            .group_by(friendship::Column::UpdatedAt)
             .offset(Some(page * page_size))
             .limit(Some(page_size))
             .into_model::<FriendshipWithStats>()
@@ -405,7 +405,7 @@ impl FriendshipStore {
 pub struct FriendshipWithStats {
     pub requester_id: Uuid,
     pub addressee_id: Uuid,
-    pub created_at: NaiveDateTime,
+    pub updated_at: NaiveDateTime,
     pub times_won: i64,
     pub times_lost: i64,
     pub times_drawn: i64,

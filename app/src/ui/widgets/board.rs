@@ -29,6 +29,7 @@ pub struct BoardWidget<'a> {
     highlight_color: Color32,
     threat_target_color: Color32,
     threat_source_color: Color32,
+    legal_targets_fn: Option<Box<dyn FnMut(Square) -> Vec<Square> + 'a>>,
 }
 
 impl<'a> BoardWidget<'a> {
@@ -45,6 +46,7 @@ impl<'a> BoardWidget<'a> {
             highlight_color: Color32::from_rgba_premultiplied(145, 130, 50, 75),
             threat_target_color: Color32::from_rgba_premultiplied(210, 45, 35, 200),
             threat_source_color: Color32::from_rgba_premultiplied(200, 50, 40, 140),
+            legal_targets_fn: None,
         }
     }
 
@@ -85,6 +87,11 @@ impl<'a> BoardWidget<'a> {
 
     pub fn threat_source_color(mut self, color: Color32) -> Self {
         self.threat_source_color = color;
+        self
+    }
+
+    pub fn legal_targets_fn(mut self, f: impl FnMut(Square) -> Vec<Square> + 'a) -> Self {
+        self.legal_targets_fn = Some(Box::new(f));
         self
     }
 
@@ -168,38 +175,45 @@ impl<'a> BoardWidget<'a> {
 
         let hover_sq = response
             .hover_pos()
+            .or_else(|| response.interact_pointer_pos())
             .and_then(|p| self.pos_to_square(p, board_rect));
 
-        if response.drag_started()
-            && let Some(sq) = hover_sq
-            && self.can_interact_with(sq)
-        {
-            state = BoardInteraction::Dragging(sq);
-        }
+        let primary_pressed =
+            response.contains_pointer() && ui.input(|i| i.pointer.primary_pressed());
+        let primary_down = ui.input(|i| i.pointer.primary_down());
 
-        if response.drag_stopped()
-            && let BoardInteraction::Dragging(from) = state
-            && let Some(to) = hover_sq
-        {
-            if to != from {
-                action = Some(BoardAction::Move { from, to });
+        match state {
+            BoardInteraction::Idle => {
+                if primary_pressed
+                    && let Some(sq) = hover_sq
+                    && self.can_interact_with(sq)
+                {
+                    state = BoardInteraction::Dragging(sq);
+                }
             }
-            state = BoardInteraction::Idle;
-        }
 
-        if response.clicked() {
-            match state {
-                BoardInteraction::Idle => {
-                    if let Some(sq) = hover_sq
-                        && self.can_interact_with(sq)
-                    {
-                        state = BoardInteraction::Selected(sq);
+            BoardInteraction::Selected(from) => {
+                if primary_pressed {
+                    if let Some(sq) = hover_sq {
+                        if self.can_interact_with(sq) {
+                            state = BoardInteraction::Dragging(sq);
+                        } else {
+                            action = Some(BoardAction::Move { from, to: sq });
+                            state = BoardInteraction::Idle;
+                        }
+                    } else {
+                        state = BoardInteraction::Idle;
                     }
                 }
-                BoardInteraction::Selected(from) => {
+            }
+
+            BoardInteraction::Dragging(from) => {
+                if !primary_down {
                     if let Some(to) = hover_sq {
                         if to == from {
-                            state = BoardInteraction::Idle;
+                            state = BoardInteraction::Selected(from);
+                        } else if self.can_interact_with(to) {
+                            state = BoardInteraction::Selected(to);
                         } else {
                             action = Some(BoardAction::Move { from, to });
                             state = BoardInteraction::Idle;
@@ -208,7 +222,6 @@ impl<'a> BoardWidget<'a> {
                         state = BoardInteraction::Idle;
                     }
                 }
-                _ => {}
             }
         }
 
@@ -263,6 +276,7 @@ impl<'a> BoardWidget<'a> {
         board_rect: &Rect,
         interaction: BoardInteraction,
         response: &Response,
+        hide_square: Option<Square>,
     ) {
         let sq_size = board_rect.width() / 8.0;
         let painter = ui.painter();
@@ -278,7 +292,7 @@ impl<'a> BoardWidget<'a> {
         for pv in &self.vis.pieces {
             let pv_sq: Square = pv.coords.into();
 
-            if dragging_sq == Some(pv_sq) {
+            if dragging_sq == Some(pv_sq) || hide_square == Some(pv_sq) {
                 continue;
             }
 
@@ -397,6 +411,48 @@ impl<'a> BoardWidget<'a> {
             );
         }
     }
+
+    fn paint_legal_target(&self, painter: &egui::Painter, board_rect: &Rect, square: Square) {
+        let cell = board_rect.width() / 8.0;
+        let center = self.square_to_screen(square, board_rect);
+        let color = Color32::from_rgba_premultiplied(0, 0, 0, 50);
+
+        if self.piece_at_square(square).is_some() {
+            let half = cell * 0.5;
+            let s = cell * 0.17;
+            let min = Pos2::new(center.x - half, center.y - half);
+            let max = Pos2::new(center.x + half, center.y + half);
+
+            let corners: [Vec<Pos2>; 4] = [
+                vec![
+                    Pos2::new(min.x, min.y),
+                    Pos2::new(min.x + s, min.y),
+                    Pos2::new(min.x, min.y + s),
+                ],
+                vec![
+                    Pos2::new(max.x, min.y),
+                    Pos2::new(max.x - s, min.y),
+                    Pos2::new(max.x, min.y + s),
+                ],
+                vec![
+                    Pos2::new(min.x, max.y),
+                    Pos2::new(min.x + s, max.y),
+                    Pos2::new(min.x, max.y - s),
+                ],
+                vec![
+                    Pos2::new(max.x, max.y),
+                    Pos2::new(max.x - s, max.y),
+                    Pos2::new(max.x, max.y - s),
+                ],
+            ];
+
+            for verts in corners {
+                painter.add(egui::Shape::convex_polygon(verts, color, Stroke::NONE));
+            }
+        } else {
+            painter.circle_filled(center, cell * 0.15, color);
+        }
+    }
 }
 
 impl<'a> egui::Widget for BoardWidget<'a> {
@@ -450,7 +506,23 @@ impl<'a> egui::Widget for BoardWidget<'a> {
                 self.paint_highlight(&painter, &rect, *sq, self.threat_target_color);
             }
 
-            self.paint_pieces(ui, &rect, interaction, &response);
+            if let Some(ref mut f) = self.legal_targets_fn {
+                let sq = match interaction {
+                    BoardInteraction::Selected(sq) | BoardInteraction::Dragging(sq) => Some(sq),
+                    _ => None,
+                };
+                if let Some(sq) = sq {
+                    for target in f(sq) {
+                        self.paint_legal_target(&painter, &rect, target);
+                    }
+                }
+            }
+
+            let hide_square = action.map(|a| match a {
+                BoardAction::Move { from, .. } => from,
+            });
+            self.paint_pieces(ui, &rect, interaction, &response, hide_square);
+
             self.paint_labels(ui, &rect);
         }
 

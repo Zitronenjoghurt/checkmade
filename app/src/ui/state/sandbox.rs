@@ -12,17 +12,17 @@ pub struct SandboxState {
 impl SandboxState {
     pub fn top_player(&self) -> Option<(UserId, Color)> {
         if self.perspective == Color::White {
-            Some((self.black_id?, Color::White))
+            Some((self.black_id?, Color::Black))
         } else {
-            Some((self.white_id?, Color::Black))
+            Some((self.white_id?, Color::White))
         }
     }
 
     pub fn bottom_player(&self) -> Option<(UserId, Color)> {
         if self.perspective == Color::White {
-            Some((self.white_id?, Color::Black))
+            Some((self.white_id?, Color::White))
         } else {
-            Some((self.black_id?, Color::White))
+            Some((self.black_id?, Color::Black))
         }
     }
 }

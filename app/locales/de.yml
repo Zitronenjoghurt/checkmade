@@ -7,6 +7,7 @@ attempting_reconnect: Verbindung wird wiederhergestellt
 black: Schwarz
 cancel: Abbrechen
 categories: Kategorien
+changelog: Changelog
 checkmate: Schachmatt
 claim_draw: Unentschieden Beanspruchen
 claim_draw_info: Durch die aktuellen Spielumstände lässt sich Beanspruchen, dass das Spiel im Unentschieden endet.
@@ -23,6 +24,7 @@ days: Tage
 decline_draw: Unentschieden Ablehnen
 decline_draw_info: Du lehnst die Anfrage des Gegners ab und das Spiel wird fortgesetzt.
 disconnected: Verbindung getrennt
+display_legal_targets: Markiere gültige Züge
 draw_by_x: 'Unentschieden durch %{x}'
 fetching_user_info: Lade Benutzerinfos
 fivefold_repetition: Fünffachwiederholung

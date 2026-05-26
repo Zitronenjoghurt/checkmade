@@ -54,7 +54,6 @@ impl Display for Locale {
 #[macro_export]
 macro_rules! tl {
     ($translatable:expr) => {{
-        use $crate::i18n::Translatable;
         rust_i18n::t!($translatable.key())
     }};
     ($translatable:expr, $($key:ident = $value:expr),* $(,)?) => {{

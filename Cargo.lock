@@ -995,17 +995,16 @@ dependencies = [
 
 [[package]]
 name = "checkmade-app"
-version = "0.1.0"
+version = "0.1.0-alpha.2"
 dependencies = [
- "anyhow",
  "checkmade-core",
  "chrono",
  "eframe",
  "egui",
  "egui-notify",
  "egui-phosphor",
+ "egui_commonmark",
  "egui_dock",
- "egui_extras",
  "ehttp",
  "ewebsock",
  "heck 0.5.0",
@@ -1026,7 +1025,7 @@ dependencies = [
 
 [[package]]
 name = "checkmade-core"
-version = "0.1.0"
+version = "0.1.0-alpha.2"
 dependencies = [
  "async-trait",
  "bitcode",
@@ -1049,7 +1048,7 @@ dependencies = [
 
 [[package]]
 name = "checkmade-server"
-version = "0.1.0"
+version = "0.1.0-alpha.2"
 dependencies = [
  "axum",
  "checkmade-core",
@@ -1731,6 +1730,29 @@ dependencies = [
 ]
 
 [[package]]
+name = "egui_commonmark"
+version = "0.23.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "55df531ff51161b3c6212e0ee2166b370f150254bf4448a8a15c3d26fec87958"
+dependencies = [
+ "egui",
+ "egui_commonmark_backend",
+ "egui_extras",
+ "pulldown-cmark",
+]
+
+[[package]]
+name = "egui_commonmark_backend"
+version = "0.23.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fe04399ca5a2196965833a2918e50400449721fd9350e31ae7d84d6690859437"
+dependencies = [
+ "egui",
+ "egui_extras",
+ "pulldown-cmark",
+]
+
+[[package]]
 name = "egui_dock"
 version = "0.19.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1752,6 +1774,7 @@ dependencies = [
  "ahash 0.8.12",
  "egui",
  "enum-map",
+ "image",
  "log",
  "mime_guess2",
  "profiling",
@@ -2331,7 +2354,7 @@ dependencies = [
 [[package]]
 name = "giga-chess"
 version = "0.10.0"
-source = "git+https://github.com/Zitronenjoghurt/giga-chess?branch=main#5b07612c4926e07995ed7db93fc568d7b76a8193"
+source = "git+https://github.com/Zitronenjoghurt/giga-chess?rev=fe6fa5ada20d5ae53fad8cebd3e6d374d7603e4c#fe6fa5ada20d5ae53fad8cebd3e6d374d7603e4c"
 dependencies = [
  "bitcode",
  "serde",
@@ -3529,7 +3552,6 @@ name = "migration"
 version = "0.1.0"
 dependencies = [
  "sea-orm-migration",
- "tokio",
 ]
 
 [[package]]
@@ -4680,6 +4702,17 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 1.0.109",
+]
+
+[[package]]
+name = "pulldown-cmark"
+version = "0.13.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e9f068eba8e7071c5f9511831b44f32c740d5adf574e990f946ddb53db2f314e"
+dependencies = [
+ "bitflags 2.11.1",
+ "memchr",
+ "unicase",
 ]
 
 [[package]]

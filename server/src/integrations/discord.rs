@@ -1,5 +1,4 @@
 use crate::error::{ServerError, ServerResult};
-use oauth2::basic::BasicTokenResponse;
 use oauth2::reqwest::Url;
 use oauth2::{
     reqwest, AuthUrl, AuthorizationCode, Client, ClientId, ClientSecret, CsrfToken,
@@ -37,7 +36,7 @@ impl DiscordIntegration {
         &self,
         code: AuthorizationCode,
         pkce_verifier: PkceCodeVerifier,
-    ) -> ServerResult<BasicTokenResponse> {
+    ) -> ServerResult<oauth2::basic::BasicTokenResponse> {
         self.oauth_client
             .exchange_code(code)
             .set_pkce_verifier(pkce_verifier)
@@ -80,8 +79,8 @@ type DiscordOauthClient = Client<
 #[derive(serde::Deserialize)]
 pub struct DiscordUser {
     pub id: String,
-    pub username: String,
-    pub avatar: Option<String>,
+    pub _username: String,
+    pub _avatar: Option<String>,
 }
 
 pub struct DiscordConfig {

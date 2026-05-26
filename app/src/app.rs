@@ -12,7 +12,9 @@ use crate::ui::widgets::generic_select::GenericSelect;
 use crate::ui::widgets::profile_menu::ProfileMenu;
 use crate::ui::widgets::with_badge::WithBadge;
 use crate::utils::images::Images;
+use crate::utils::markdown::Markdown;
 use crate::ws::Ws;
+use crate::VERSION;
 use checkmade_core::game::play_event::PlayEvent;
 use checkmade_core::giga_chess::prelude::event::SessionEvent;
 use checkmade_core::giga_chess::prelude::{Color, GameOutcome};
@@ -29,6 +31,8 @@ pub struct Checkmade {
     ui: UiState,
     #[serde(skip, default)]
     images: Images,
+    #[serde(skip, default)]
+    markdown: Markdown,
     #[serde(skip, default)]
     server_time: ServerTime,
     #[serde(skip, default)]
@@ -47,6 +51,7 @@ impl Default for Checkmade {
             dock: DockState::new(vec![]),
             ui: UiState::default(),
             images: Images::default(),
+            markdown: Markdown::default(),
             server_time: ServerTime::default(),
             store: Store::default(),
             toasts: Toasts::default(),
@@ -200,9 +205,7 @@ impl Checkmade {
             }
             ServerMessage::PublicUserInfo(info) => self.store.users.set(info.id, info),
             ServerMessage::Session(session) => {
-                if let Some(me) = &self.store.me.value {
-                    self.store.sessions.insert(session.id, session);
-                }
+                self.store.sessions.insert(session.id, session);
             }
             ServerMessage::Sessions(sessions) => {
                 for session in sessions {
@@ -292,6 +295,7 @@ impl Checkmade {
         CentralPanel::default().show_inside(ui, |ui| {
             let mut viewer = TabViewer {
                 images: &mut self.images,
+                md: &mut self.markdown,
                 state: &mut self.ui,
                 server_time: &mut self.server_time,
                 store: &mut self.store,
@@ -309,10 +313,18 @@ impl Checkmade {
     fn show_top_bar(&mut self, ui: &mut egui::Ui) {
         Panel::top("top_bar").show_inside(ui, |ui| {
             ui.horizontal(|ui| {
-                ui.label("Checkmade");
+                ui.label(format!("Checkmade v{}", VERSION));
                 ui.separator();
                 ConnectionStatus::new(&self.server_time, &self.ws).ui(ui);
                 ui.separator();
+
+                if ui
+                    .button(icons::CLOCK_COUNTER_CLOCKWISE)
+                    .on_hover_text(Changelog.t())
+                    .clicked()
+                {
+                    self.open_tab(Tab::Changelog);
+                }
 
                 if ui
                     .button(icons::GEAR_SIX)
@@ -442,6 +454,8 @@ impl Checkmade {
         match event {
             PlayEvent::Normal(event) => match event {
                 SessionEvent::GameOver(outcome) => {
+                    // ToDo: Send notification
+
                     if let Some(session_id) = self.ui.arena.session_id() {
                         self.ui.arena.subscribed_session = None;
                         self.ws.unsubscribe_session(session_id);
@@ -480,7 +494,9 @@ impl Checkmade {
                     }
                     self.ui.arena.transform_active_into_sandbox(&self.store);
                 }
-                SessionEvent::DrawOffered { by } => {}
+                SessionEvent::DrawOffered { by } => {
+                    // ToDo: Send notification
+                }
                 _ => {}
             },
         }

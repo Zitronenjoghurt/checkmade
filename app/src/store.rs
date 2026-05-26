@@ -1,7 +1,6 @@
 use crate::event::{AppEvent, ReconnectedEvent};
 use crate::ws::cache::FetchableCache;
 use crate::ws::fetchable::Fetchable;
-use crate::ws::Ws;
 use checkmade_core::game::play_session::PlaySession;
 use checkmade_core::giga_chess::prelude::{Color, Piece};
 use checkmade_core::types::friend_info::FriendInfo;
@@ -76,7 +75,7 @@ impl Store {
         self.users.invalidate();
     }
 
-    pub fn ensure_session_history(&mut self, ws: &mut Ws) {
+    pub fn ensure_session_history(&mut self, ws: &mut crate::ws::Ws) {
         if !self.has_session_history {
             ws.request_session_history();
             self.has_session_history = true;

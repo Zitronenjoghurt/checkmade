@@ -109,6 +109,10 @@ impl ArenaState {
     pub fn time(&self, store: &Store, color: Color, now_ms: u64) -> Option<(u64, u64)> {
         self.source.time(store, color, now_ms)
     }
+
+    pub fn legal_targets(&self, sq: Square, store: &Store) -> Vec<Square> {
+        self.source.legal_targets(sq, store)
+    }
 }
 
 #[derive(serde::Serialize, serde::Deserialize)]
@@ -207,7 +211,10 @@ impl ArenaSource {
                     (false, None)
                 }
             }
-            Self::Sandbox(_) => (true, None),
+            Self::Sandbox(state) => {
+                let side = state.game.position().side_to_move;
+                (true, Some(side))
+            }
         }
     }
 
@@ -337,6 +344,18 @@ impl ArenaSource {
                 ))
             }
             Self::Sandbox(_) => None,
+        }
+    }
+
+    pub fn legal_targets(&self, sq: Square, store: &Store) -> Vec<Square> {
+        match self {
+            Self::Active(id) => {
+                let Some(session) = store.sessions.get_entry(id) else {
+                    return vec![];
+                };
+                session.game().legal_targets(sq)
+            }
+            Self::Sandbox(state) => state.game.legal_targets(sq),
         }
     }
 }

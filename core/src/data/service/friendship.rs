@@ -200,7 +200,7 @@ impl FriendshipService {
                     };
                     FriendInfo {
                         user_id: friend_id.into(),
-                        since: fs.created_at.and_utc().timestamp_millis() as u64,
+                        since: fs.updated_at.and_utc().timestamp_millis() as u64,
                         times_won: fs.times_won as u64,
                         times_lost: fs.times_lost as u64,
                         times_drawn: fs.times_drawn as u64,

@@ -46,6 +46,10 @@ impl SettingsContent<'_> {
                     s.dirty = true;
                 }
                 ui.end_row();
+
+                ui.label(DisplayLegalTargets.t());
+                s.dirty |= ui.checkbox(&mut s.display_legal_targets, "").changed();
+                ui.end_row();
             });
     }
 }

@@ -1,7 +1,7 @@
 //! An updated version of https://github.com/n00kii/egui-modal/blob/main/src/modal.rs
 
 use egui::{
-    emath::{Align, Align2}, epaint::{Color32, Pos2, Rounding}, Area, Button, Context, Id, Layout, Response, RichText, Sense, Ui,
+    emath::{Align, Align2}, epaint::{Color32, Pos2}, Area, Button, Context, Id, Layout, Response, RichText, Sense, Ui,
     WidgetText,
     Window,
 };
@@ -227,7 +227,7 @@ pub struct Modal {
 }
 
 fn ui_with_margin<R>(ui: &mut Ui, margin: f32, add_contents: impl FnOnce(&mut Ui) -> R) {
-    egui::Frame::none()
+    egui::Frame::new()
         .inner_margin(margin)
         .show(ui, |ui| add_contents(ui));
 }
@@ -492,7 +492,7 @@ impl Modal {
                         }
                     }
                     ui.painter()
-                        .rect_filled(screen_rect, Rounding::ZERO, self.style.overlay_color);
+                        .rect_filled(screen_rect, 0.0, self.style.overlay_color);
                 });
 
             ctx_clone.move_to_top(area_resp.response.layer_id);

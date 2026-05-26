@@ -75,10 +75,10 @@ impl egui::Widget for FriendAdd<'_> {
                         let enter =
                             resp.lost_focus() && ui.input(|i| i.key_pressed(egui::Key::Enter));
 
-                        if (ui
+                        if ui
                             .add_enabled(can_send, egui::Button::new(icons::PAPER_PLANE_RIGHT))
                             .clicked()
-                            || (enter && can_send))
+                            || (enter && can_send)
                         {
                             self.ws.send_friend_request(input.trim().to_string());
                             input.clear();

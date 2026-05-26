@@ -27,7 +27,6 @@ impl Widget for ProfileMenu<'_> {
                         .clicked()
                     {
                         self.http.do_logout(ui.ctx());
-                        ui.close_menu();
                     }
                 });
             }

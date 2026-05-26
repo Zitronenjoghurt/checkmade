@@ -8,7 +8,6 @@ pub mod generic_select;
 mod piece_icons;
 pub mod profile_menu;
 pub mod reset_slider;
-pub mod session;
 mod session_config;
 mod session_config_data;
 mod session_request_create;

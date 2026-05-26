@@ -6,6 +6,7 @@ use strum::EnumIter;
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
 pub struct Settings {
     pub ui_scale: f32,
+    pub display_legal_targets: bool,
     pub current_tab: SettingsTab,
     pub locale: Locale,
     #[serde(skip, default = "default_true")]
@@ -16,6 +17,7 @@ impl Default for Settings {
     fn default() -> Self {
         Self {
             ui_scale: Self::DEFAULT_UI_SCALE,
+            display_legal_targets: false,
             current_tab: SettingsTab::default(),
             locale: Locale::default(),
             dirty: true,
