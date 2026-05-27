@@ -47,6 +47,13 @@ impl BoardVisuals {
             threat_sources,
         }
     }
+
+    pub fn from_game_at(perspective: Color, game: &Game, move_index: usize) -> Self {
+        let history = game.history();
+        let moves = &history[..move_index.min(history.len())];
+        let replayed = Game::from_moves(moves).expect("recorded history is always valid");
+        Self::from_game(perspective, &replayed)
+    }
 }
 
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]

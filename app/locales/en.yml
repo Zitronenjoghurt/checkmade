@@ -4,6 +4,7 @@ add_friend: Add Friend
 agreement: Agreement
 arena: Arena
 attempting_reconnect: Attempting reconnect
+back_to_present: Back to present
 black: Black
 cancel: Cancel
 categories: Categories
@@ -54,6 +55,7 @@ modal_remove_friend_title: Remove friend
 modal_remove_friend_body: 'Do you really want to remove %{x} from your friends list?'
 no_friends: No friends
 no_friend_requests: No friend requests
+no_move_history: No move history
 no_ongoing_games: No ongoing games
 no_past_games: No past games
 no_session_requests: No session requests

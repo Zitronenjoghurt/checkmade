@@ -4,6 +4,7 @@ add_friend: x
 agreement: x
 arena: x
 attempting_reconnect: x
+back_to_present: x
 black: x
 cancel: x
 categories: x
@@ -54,6 +55,7 @@ modal_remove_friend_title: x
 modal_remove_friend_body: 'Do you really want to remove %{x} from your friends list?'
 no_friends: x
 no_friend_requests: x
+no_move_history: x
 no_ongoing_games: x
 no_past_games: x
 no_session_requests: x

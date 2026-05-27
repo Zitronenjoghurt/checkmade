@@ -7,6 +7,7 @@ pub struct SandboxState {
     pub black_id: Option<UserId>,
     pub white_id: Option<UserId>,
     pub perspective: Color,
+    pub san_history: Vec<String>,
 }
 
 impl SandboxState {

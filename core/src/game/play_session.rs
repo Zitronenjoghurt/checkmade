@@ -88,7 +88,12 @@ impl PlaySession {
         matches!(self.status(), SessionStatus::Ongoing)
     }
 
-    pub fn visuals(&self, user_id: UserId, color: Color) -> BoardVisuals {
+    pub fn visuals(
+        &self,
+        user_id: UserId,
+        color: Color,
+        move_index: Option<usize>,
+    ) -> BoardVisuals {
         match &self.kind {
             PlaySessionKind::Normal(session) => {
                 let perspective = if user_id == self.white {
@@ -98,7 +103,11 @@ impl PlaySession {
                 } else {
                     color
                 };
-                BoardVisuals::from_game(perspective, session.game())
+                if let Some(move_index) = move_index {
+                    BoardVisuals::from_game_at(perspective, session.game(), move_index)
+                } else {
+                    BoardVisuals::from_game(perspective, session.game())
+                }
             }
         }
     }
@@ -153,6 +162,12 @@ impl PlaySession {
     pub fn increment_ms(&self, color: Color) -> Option<u64> {
         match &self.kind {
             PlaySessionKind::Normal(session) => Some(session.clock()?.increment_ms(color)),
+        }
+    }
+
+    pub fn san_history(&self) -> &[String] {
+        match &self.kind {
+            PlaySessionKind::Normal(session) => session.san_history(),
         }
     }
 }

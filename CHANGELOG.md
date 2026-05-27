@@ -12,6 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Added
 
 - This changelog
+- Move history
+    - You can now go back and forth in the move history during or after a game
 - Legal move highlights (enable in settings)
     - Capturable squares even get little triangles in their corners; I think it looks neat :)
 - Version identifier in the top-left

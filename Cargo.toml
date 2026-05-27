@@ -9,7 +9,7 @@ edition = "2024"
 
 [workspace.dependencies]
 checkmade-core = { path = "core" }
-giga-chess = { git = "https://github.com/Zitronenjoghurt/giga-chess", rev = "fe6fa5ada20d5ae53fad8cebd3e6d374d7603e4c" }
+giga-chess = { git = "https://github.com/Zitronenjoghurt/giga-chess", rev = "a3ba269e3710653c347f6dca7303d06435f2635e" }
 anyhow = "1.0.102"
 bitcode = "0.6.9"
 serde = { version = "1.0.228", features = ["derive"] }

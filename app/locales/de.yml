@@ -4,6 +4,7 @@ add_friend: Freund hinzufügen
 agreement: Übereinstimmung
 arena: Arena
 attempting_reconnect: Verbindung wird wiederhergestellt
+back_to_present: Zur Gegenwart
 black: Schwarz
 cancel: Abbrechen
 categories: Kategorien
@@ -54,6 +55,7 @@ modal_remove_friend_title: Freund entfernen
 modal_remove_friend_body: 'Willst du %{x} wirklich als freund entfernen?'
 no_friends: Keine Freunde
 no_friend_requests: Keine Freundschaftsanfragen
+no_move_history: Keine Zug-Historie
 no_ongoing_games: Keine laufenden Spiele
 no_past_games: Keine vergangenen Spiele
 no_session_requests: Keine Sitzungsanfragen

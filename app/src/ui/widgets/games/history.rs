@@ -79,6 +79,7 @@ impl egui::Widget for GamesHistory<'_> {
                                             white_id: Some(session.white),
                                             black_id: Some(session.black),
                                             perspective: me_color,
+                                            san_history: session.san_history().to_vec(),
                                         })
                                         .send(ui.ctx());
                                     }

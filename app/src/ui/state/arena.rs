@@ -1,4 +1,5 @@
 use crate::store::Store;
+use crate::ui::state::move_history::MoveHistoryState;
 use crate::ui::state::sandbox::SandboxState;
 use crate::ws::Ws;
 use checkmade_core::game::misc_action::MiscAction;
@@ -21,6 +22,8 @@ pub struct ArenaState {
     pub pending_promotion: Option<(Square, Square)>,
     #[serde(skip, default)]
     pub pending_action: Option<MiscAction>,
+    #[serde(skip, default)]
+    pub move_history: MoveHistoryState,
 }
 
 impl Default for ArenaState {
@@ -31,13 +34,19 @@ impl Default for ArenaState {
             source: ArenaSource::default(),
             pending_promotion: None,
             pending_action: None,
+            move_history: Default::default(),
         }
     }
 }
 
 impl ArenaState {
     pub fn visuals(&self, user_id: UserId, store: &Store) -> Option<ArenaVisuals> {
-        self.source.visuals(user_id, self.perspective, store)
+        self.source.visuals(
+            user_id,
+            self.perspective,
+            store,
+            self.move_history.current_index(),
+        )
     }
 
     pub fn handle_move(&mut self, from: Square, to: Square, promotion: Option<Piece>, ws: &mut Ws) {
@@ -53,6 +62,9 @@ impl ArenaState {
     }
 
     pub fn movement(&self, store: &Store, user_id: UserId) -> (bool, Option<Color>) {
+        if !self.move_history.is_at_present() {
+            return (false, None);
+        }
         self.source.movement(store, user_id)
     }
 
@@ -86,6 +98,7 @@ impl ArenaState {
             black_id: Some(session.black),
             white_id: Some(session.white),
             perspective,
+            san_history: session.san_history().to_vec(),
         };
         self.source = ArenaSource::Sandbox(sandbox);
     }
@@ -133,11 +146,12 @@ impl ArenaSource {
         user_id: UserId,
         perspective: Color,
         store: &Store,
+        move_index: Option<usize>,
     ) -> Option<ArenaVisuals> {
         match self {
             Self::Active(id) => {
                 let session = store.sessions.get_entry(id)?;
-                let board = session.visuals(user_id, perspective);
+                let board = session.visuals(user_id, perspective, move_index);
                 let (bottom_player, top_player) = if board.perspective == Color::White {
                     ((session.white, Color::White), (session.black, Color::Black))
                 } else {
@@ -149,11 +163,18 @@ impl ArenaSource {
                     bottom_player: Some(bottom_player),
                 })
             }
-            Self::Sandbox(state) => Some(ArenaVisuals {
-                board: BoardVisuals::from_game(state.perspective, &state.game),
-                top_player: state.top_player(),
-                bottom_player: state.bottom_player(),
-            }),
+            Self::Sandbox(state) => {
+                let board = if let Some(move_index) = move_index {
+                    BoardVisuals::from_game_at(perspective, &state.game, move_index)
+                } else {
+                    BoardVisuals::from_game(perspective, &state.game)
+                };
+                Some(ArenaVisuals {
+                    board,
+                    top_player: state.top_player(),
+                    bottom_player: state.bottom_player(),
+                })
+            }
         }
     }
 
@@ -161,7 +182,9 @@ impl ArenaSource {
         match self {
             ArenaSource::Sandbox(state) => {
                 if let Some(mv) = state.game.find_move(from, to, promotion) {
-                    let _ = state.game.play_move(mv);
+                    if let Ok(san) = state.game.play_move_get_san(mv) {
+                        state.san_history.push(san);
+                    }
                 }
             }
             ArenaSource::Active(id) => {
@@ -356,6 +379,18 @@ impl ArenaSource {
                 session.game().legal_targets(sq)
             }
             Self::Sandbox(state) => state.game.legal_targets(sq),
+        }
+    }
+
+    pub fn san_history<'a>(&'a self, store: &'a Store) -> &'a [String] {
+        match self {
+            Self::Active(id) => {
+                let Some(session) = store.sessions.get_entry(id) else {
+                    return &[];
+                };
+                session.san_history()
+            }
+            Self::Sandbox(state) => &state.san_history,
         }
     }
 }

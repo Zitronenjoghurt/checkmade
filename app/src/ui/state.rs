@@ -3,6 +3,7 @@ use crate::ui::widgets::games::GamesTab;
 use checkmade_core::types::session_request::CreateSessionRequest;
 
 pub mod arena;
+mod move_history;
 pub mod sandbox;
 pub mod settings;
 

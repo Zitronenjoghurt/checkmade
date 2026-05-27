@@ -4,6 +4,7 @@ use crate::tl;
 use crate::ui::icons;
 use crate::ui::modal::Modal;
 use crate::ui::state::arena::{ArenaActions, ArenaState};
+use crate::ui::widgets::arena::move_list::{MoveListEvent, MoveListWidget};
 use crate::ui::widgets::arena::user::ArenaUser;
 use crate::ui::widgets::board::{board_action, BoardAction, BoardWidget};
 use crate::utils::fmt::{fmt_color, fmt_outcome};
@@ -14,6 +15,7 @@ use checkmade_core::giga_chess::prelude::{Color, Piece};
 use checkmade_core::lingo::Lingo::*;
 use egui::RichText;
 
+mod move_list;
 mod user;
 
 pub struct ArenaWidget<'a> {
@@ -213,60 +215,116 @@ impl egui::Widget for ArenaWidget<'_> {
             self.state.pending_promotion = None;
         }
 
-        ui.vertical(|ui| {
-            if let Some(outcome) = self.state.outcome(self.store) {
-                ui.heading(fmt_outcome(&outcome));
-            } else if let Some(color) = self.state.color_to_move(self.store) {
-                ui.horizontal(|ui| {
-                    ui.heading(tl!(XToMove, x = fmt_color(color)));
-                    let actions = self.state.actions(self.store, me_id);
-                    Self::action_buttons(ui, &actions, self.state);
-                });
-            } else {
-                ui.heading(OngoingGame.t().to_string());
-            };
-            ui.separator();
+        if let Some(outcome) = self.state.outcome(self.store) {
+            ui.heading(fmt_outcome(&outcome));
+        } else if let Some(color) = self.state.color_to_move(self.store) {
+            ui.horizontal(|ui| {
+                ui.heading(tl!(XToMove, x = fmt_color(color)));
+                let actions = self.state.actions(self.store, me_id);
+                Self::action_buttons(ui, &actions, self.state);
+            });
+        } else {
+            ui.heading(OngoingGame.t().to_string());
+        };
+        ui.separator();
 
-            let available_w = ui.available_width();
-            let available_h = ui.available_height();
+        let total_height = ui.available_height();
+        let spacing = ui.spacing().item_spacing;
 
-            let player_panel_h = 52.0;
-            let player_count =
-                visuals.top_player.is_some() as u8 + visuals.bottom_player.is_some() as u8;
-            let budget_for_board = available_h - player_count as f32 * player_panel_h;
+        let player_panel_h = 52.0;
+        let player_count =
+            visuals.top_player.is_some() as u8 + visuals.bottom_player.is_some() as u8;
+        let player_spacing = if player_count > 0 {
+            player_count as f32 * spacing.y
+        } else {
+            0.0
+        };
+        let budget_from_height =
+            total_height - player_count as f32 * player_panel_h - player_spacing;
+        let board_size = budget_from_height.max(0.0);
 
-            let board_size = available_w.min(budget_for_board).max(0.0);
+        let board_column_h = board_size + player_count as f32 * player_panel_h - 4.0;
 
-            if let Some((user_id, color)) = visuals.top_player {
-                ArenaUser::new(self.state, user_id, color, now_ms, self.images, self.store)
-                    .width(board_size - 14.0)
-                    .ui(ui);
-            }
+        ui.horizontal(|ui| {
+            ui.vertical(|ui| {
+                ui.set_max_width(board_size);
 
-            let (can_move, restriction) = self.state.movement(self.store, me_id);
-            let mut board = BoardWidget::new(self.images, &board_visuals, "arena_board")
-                .size(board_size)
-                .can_move(can_move)
-                .move_restriction(restriction);
-            if self.settings.display_legal_targets {
-                board = board.legal_targets_fn(|sq| self.state.legal_targets(sq, self.store));
-            }
-            board.ui(ui);
-
-            if let Some((user_id, color)) = visuals.bottom_player {
-                ArenaUser::new(self.state, user_id, color, now_ms, self.images, self.store)
-                    .width(board_size - 14.0)
-                    .ui(ui);
-            }
-
-            if let Some(BoardAction::Move { from, to }) = board_action(ui, "arena_board") {
-                if self.state.source.needs_promotion(from, to, self.store) {
-                    self.state.pending_promotion = Some((from, to));
-                    promo_modal.open();
-                } else {
-                    self.state.handle_move(from, to, None, self.ws);
+                if let Some((user_id, color)) = visuals.top_player {
+                    ArenaUser::new(self.state, user_id, color, now_ms, self.images, self.store)
+                        .width(board_size - 14.0)
+                        .ui(ui);
                 }
-            }
+
+                let (can_move, restriction) = self.state.movement(self.store, me_id);
+                let mut board = BoardWidget::new(self.images, &board_visuals, "arena_board")
+                    .size(board_size)
+                    .can_move(can_move)
+                    .move_restriction(restriction);
+                if self.settings.display_legal_targets {
+                    board = board.legal_targets_fn(|sq| self.state.legal_targets(sq, self.store));
+                }
+                board.ui(ui);
+
+                if let Some((user_id, color)) = visuals.bottom_player {
+                    ArenaUser::new(self.state, user_id, color, now_ms, self.images, self.store)
+                        .width(board_size - 14.0)
+                        .ui(ui);
+                }
+
+                if let Some(BoardAction::Move { from, to }) = board_action(ui, "arena_board") {
+                    if self.state.source.needs_promotion(from, to, self.store) {
+                        self.state.pending_promotion = Some((from, to));
+                        promo_modal.open();
+                    } else {
+                        self.state.handle_move(from, to, None, self.ws);
+                    }
+                }
+            });
+
+            let frame = egui::Frame::group(ui.style());
+            let frame_margins = frame.inner_margin.sum() + frame.outer_margin.sum();
+            let inner_height = (board_column_h - frame_margins.y).max(0.0);
+
+            frame.show(ui, |ui| {
+                ui.set_height(inner_height);
+
+                let san_history = self.state.source.san_history(self.store);
+                let total_moves = san_history.len();
+
+                let body_h = ui.text_style_height(&egui::TextStyle::Body);
+                let total_rounds = total_moves.div_ceil(2).max(1);
+                let num_w = ui.fonts_mut(|f| {
+                    f.layout_no_wrap(
+                        format!("{}.", total_rounds),
+                        egui::FontId::monospace(body_h),
+                        egui::Color32::WHITE,
+                    )
+                    .size()
+                    .x
+                }) + 8.0;
+                let list_width = num_w + 56.0 * 2.0;
+
+                ui.vertical(|ui| {
+                    ui.set_max_width(list_width);
+                    ui.set_max_height(board_column_h);
+
+                    let move_list =
+                        MoveListWidget::new(san_history, self.state.move_history.current_index());
+                    if let Some(event) = move_list.show(ui) {
+                        match event {
+                            MoveListEvent::Move(idx) => {
+                                self.state.move_history.go_to(idx, total_moves)
+                            }
+                            MoveListEvent::Back => self.state.move_history.go_back(total_moves),
+                            MoveListEvent::Forward => {
+                                self.state.move_history.go_forward(total_moves)
+                            }
+                            MoveListEvent::Start => self.state.move_history.go_to(0, total_moves),
+                            MoveListEvent::Present => self.state.move_history.snap_to_present(),
+                        }
+                    }
+                });
+            });
         })
         .response
     }
