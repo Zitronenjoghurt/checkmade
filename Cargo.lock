@@ -995,7 +995,7 @@ dependencies = [
 
 [[package]]
 name = "checkmade-app"
-version = "0.1.0-alpha.2"
+version = "0.1.0-alpha.3"
 dependencies = [
  "checkmade-core",
  "chrono",
@@ -1025,7 +1025,7 @@ dependencies = [
 
 [[package]]
 name = "checkmade-core"
-version = "0.1.0-alpha.2"
+version = "0.1.0-alpha.3"
 dependencies = [
  "async-trait",
  "bitcode",
@@ -1048,7 +1048,7 @@ dependencies = [
 
 [[package]]
 name = "checkmade-server"
-version = "0.1.0-alpha.2"
+version = "0.1.0-alpha.3"
 dependencies = [
  "axum",
  "checkmade-core",

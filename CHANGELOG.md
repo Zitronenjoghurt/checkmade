@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+# v0.1.0-alpha.3 - To be released
+
+## Added
+
+- Time travel! >:)
+    - In sandbox mode you can now explore alternative outcomes of your game by looking at an older position and taking a
+      different move
+
+## Fixed
+
+- Player could only review past games from white's perspective
+
+---
+
 # v0.1.0-alpha.2 - 2026-05-27
 
 ## Added

@@ -50,7 +50,9 @@ impl ArenaState {
     }
 
     pub fn handle_move(&mut self, from: Square, to: Square, promotion: Option<Piece>, ws: &mut Ws) {
-        self.source.handle_move(from, to, promotion, ws);
+        let idx = self.move_history.current_index();
+        self.source.handle_move(from, to, promotion, idx, ws);
+        self.move_history.snap_to_present();
     }
 
     pub fn has_session(&self, id: SessionId) -> bool {
@@ -63,7 +65,16 @@ impl ArenaState {
 
     pub fn movement(&self, store: &Store, user_id: UserId) -> (bool, Option<Color>) {
         if !self.move_history.is_at_present() {
-            return (false, None);
+            return match &self.source {
+                ArenaSource::Active(_) => (false, None),
+                ArenaSource::Sandbox(state) => {
+                    let game = match self.move_history.current_index() {
+                        Some(idx) => state.game_at_index(idx),
+                        None => state.game.clone(),
+                    };
+                    (true, Some(game.position().side_to_move))
+                }
+            };
         }
         self.source.movement(store, user_id)
     }
@@ -99,6 +110,7 @@ impl ArenaState {
             white_id: Some(session.white),
             perspective,
             san_history: session.san_history().to_vec(),
+            previous_lines: vec![],
         };
         self.source = ArenaSource::Sandbox(sandbox);
     }
@@ -124,7 +136,8 @@ impl ArenaState {
     }
 
     pub fn legal_targets(&self, sq: Square, store: &Store) -> Vec<Square> {
-        self.source.legal_targets(sq, store)
+        self.source
+            .legal_targets(sq, store, self.move_history.current_index())
     }
 }
 
@@ -165,9 +178,9 @@ impl ArenaSource {
             }
             Self::Sandbox(state) => {
                 let board = if let Some(move_index) = move_index {
-                    BoardVisuals::from_game_at(perspective, &state.game, move_index)
+                    BoardVisuals::from_game_at(state.perspective, &state.game, move_index)
                 } else {
-                    BoardVisuals::from_game(perspective, &state.game)
+                    BoardVisuals::from_game(state.perspective, &state.game)
                 };
                 Some(ArenaVisuals {
                     board,
@@ -178,9 +191,19 @@ impl ArenaSource {
         }
     }
 
-    pub fn handle_move(&mut self, from: Square, to: Square, promotion: Option<Piece>, ws: &mut Ws) {
+    pub fn handle_move(
+        &mut self,
+        from: Square,
+        to: Square,
+        promotion: Option<Piece>,
+        move_index: Option<usize>,
+        ws: &mut Ws,
+    ) {
         match self {
             ArenaSource::Sandbox(state) => {
+                if let Some(idx) = move_index {
+                    state.fork_at(idx);
+                }
                 if let Some(mv) = state.game.find_move(from, to, promotion) {
                     if let Ok(san) = state.game.play_move_get_san(mv) {
                         state.san_history.push(san);
@@ -237,18 +260,6 @@ impl ArenaSource {
             Self::Sandbox(state) => {
                 let side = state.game.position().side_to_move;
                 (true, Some(side))
-            }
-        }
-    }
-
-    pub fn needs_promotion(&self, from: Square, to: Square, store: &Store) -> bool {
-        match self {
-            ArenaSource::Sandbox(state) => state.game.has_promotion_move(from, to),
-            ArenaSource::Active(id) => {
-                let Some(session) = store.sessions.get_entry(id) else {
-                    return false;
-                };
-                session.has_promotion_move(from, to)
             }
         }
     }
@@ -370,15 +381,44 @@ impl ArenaSource {
         }
     }
 
-    pub fn legal_targets(&self, sq: Square, store: &Store) -> Vec<Square> {
+    pub fn legal_targets(
+        &self,
+        sq: Square,
+        store: &Store,
+        move_index: Option<usize>,
+    ) -> Vec<Square> {
         match self {
+            Self::Sandbox(state) => match move_index {
+                Some(idx) => state.game_at_index(idx).legal_targets(sq),
+                None => state.game.legal_targets(sq),
+            },
             Self::Active(id) => {
                 let Some(session) = store.sessions.get_entry(id) else {
                     return vec![];
                 };
                 session.game().legal_targets(sq)
             }
-            Self::Sandbox(state) => state.game.legal_targets(sq),
+        }
+    }
+
+    pub fn needs_promotion(
+        &self,
+        from: Square,
+        to: Square,
+        store: &Store,
+        move_index: Option<usize>,
+    ) -> bool {
+        match self {
+            ArenaSource::Sandbox(state) => match move_index {
+                Some(idx) => state.game_at_index(idx).has_promotion_move(from, to),
+                None => state.game.has_promotion_move(from, to),
+            },
+            ArenaSource::Active(id) => {
+                let Some(session) = store.sessions.get_entry(id) else {
+                    return false;
+                };
+                session.has_promotion_move(from, to)
+            }
         }
     }
 

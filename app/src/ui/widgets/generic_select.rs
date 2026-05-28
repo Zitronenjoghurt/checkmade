@@ -16,8 +16,6 @@ where
     fmt: Box<dyn Fn(T) -> String + 'a>,
 }
 
-// ── Core ────────────────────────────────────────────────────────────
-
 impl<'a, T, V> GenericSelect<'a, T, V>
 where
     T: PartialEq + Copy,
@@ -51,8 +49,6 @@ where
     }
 }
 
-// ── Display convenience ─────────────────────────────────────────────
-
 impl<'a, T, V> GenericSelect<'a, T, V>
 where
     T: PartialEq + Copy + Display,
@@ -62,8 +58,6 @@ where
         Self::new(value, variants, id, |v| v.to_string())
     }
 }
-
-// ── Enum (strum) ────────────────────────────────────────────────────
 
 impl<'a, T> GenericSelect<'a, T, <T as strum::IntoEnumIterator>::Iterator>
 where
@@ -82,8 +76,6 @@ where
         Self::new(value, T::iter(), id, fmt)
     }
 }
-
-// ── Option<T> support ───────────────────────────────────────────────
 
 impl<'a, T> GenericSelect<'a, Option<T>, Vec<Option<T>>>
 where
@@ -140,8 +132,6 @@ where
         Self::new_optional(value, T::iter(), id, fmt)
     }
 }
-
-// ── Widget ──────────────────────────────────────────────────────────
 
 impl<T, V> Widget for GenericSelect<'_, T, V>
 where

@@ -3,7 +3,7 @@ use crate::store::Store;
 use crate::tl;
 use crate::ui::icons;
 use crate::ui::modal::Modal;
-use crate::ui::state::arena::{ArenaActions, ArenaState};
+use crate::ui::state::arena::{ArenaActions, ArenaSource, ArenaState};
 use crate::ui::widgets::arena::move_list::{MoveListEvent, MoveListWidget};
 use crate::ui::widgets::arena::user::ArenaUser;
 use crate::ui::widgets::board::{board_action, BoardAction, BoardWidget};
@@ -243,7 +243,7 @@ impl egui::Widget for ArenaWidget<'_> {
             total_height - player_count as f32 * player_panel_h - player_spacing;
         let board_size = budget_from_height.max(0.0);
 
-        let board_column_h = board_size + player_count as f32 * player_panel_h - 4.0;
+        let board_column_h = board_size + player_count as f32 * player_panel_h;
 
         ui.horizontal(|ui| {
             ui.vertical(|ui| {
@@ -272,7 +272,12 @@ impl egui::Widget for ArenaWidget<'_> {
                 }
 
                 if let Some(BoardAction::Move { from, to }) = board_action(ui, "arena_board") {
-                    if self.state.source.needs_promotion(from, to, self.store) {
+                    if self.state.source.needs_promotion(
+                        from,
+                        to,
+                        self.store,
+                        self.state.move_history.current_index(),
+                    ) {
                         self.state.pending_promotion = Some((from, to));
                         promo_modal.open();
                     } else {
@@ -288,28 +293,56 @@ impl egui::Widget for ArenaWidget<'_> {
             frame.show(ui, |ui| {
                 ui.set_height(inner_height);
 
-                let san_history = self.state.source.san_history(self.store);
-                let total_moves = san_history.len();
-
-                let body_h = ui.text_style_height(&egui::TextStyle::Body);
-                let total_rounds = total_moves.div_ceil(2).max(1);
-                let num_w = ui.fonts_mut(|f| {
-                    f.layout_no_wrap(
-                        format!("{}.", total_rounds),
-                        egui::FontId::monospace(body_h),
-                        egui::Color32::WHITE,
-                    )
-                    .size()
-                    .x
-                }) + 8.0;
-                let list_width = num_w + 56.0 * 2.0;
-
                 ui.vertical(|ui| {
+                    let san_history = self.state.source.san_history(self.store).to_vec();
+                    let total_moves = san_history.len();
+
+                    let body_h = ui.text_style_height(&egui::TextStyle::Body);
+                    let total_rounds = total_moves.div_ceil(2).max(1);
+                    let num_w = ui.fonts_mut(|f| {
+                        f.layout_no_wrap(
+                            format!("{}.", total_rounds),
+                            egui::FontId::monospace(body_h),
+                            egui::Color32::WHITE,
+                        )
+                        .size()
+                        .x
+                    }) + 8.0;
+                    let list_width = num_w + 56.0 * 2.0;
+
                     ui.set_max_width(list_width);
                     ui.set_max_height(board_column_h);
 
+                    if let ArenaSource::Sandbox(sandbox) = &mut self.state.source {
+                        ui.vertical_centered(|ui| {
+                            ui.label("Sandbox Game");
+                        });
+
+                        ui.separator();
+
+                        ui.horizontal(|ui| {
+                            if ui.button(icons::DEVICE_ROTATE).clicked() {
+                                sandbox.perspective = sandbox.perspective.opposite();
+                            }
+                            if !sandbox.previous_lines.is_empty()
+                                && ui
+                                    .button(format!(
+                                        "{} ({})",
+                                        icons::ARROW_U_UP_LEFT,
+                                        sandbox.previous_lines.len()
+                                    ))
+                                    .clicked()
+                                && let Some(fork_index) = sandbox.restore_previous_line()
+                            {
+                                let total = sandbox.san_history.len();
+                                self.state.move_history.go_to(fork_index, total);
+                            }
+                        });
+                        ui.separator();
+                    }
+
                     let move_list =
-                        MoveListWidget::new(san_history, self.state.move_history.current_index());
+                        MoveListWidget::new(&san_history, self.state.move_history.current_index());
                     if let Some(event) = move_list.show(ui) {
                         match event {
                             MoveListEvent::Move(idx) => {
