@@ -17,7 +17,7 @@ serde = { workspace = true }
 serde_json = { workspace = true }
 thiserror = { workspace = true }
 tokio = { version = "1.52.3", features = ["macros", "rt-multi-thread", "signal"] }
-tower-http = { version = "0.6.11", features = ["fs"] }
+tower-http = { version = "0.6.11", features = ["fs", "set-header"] }
 tower-sessions = { version = "0.14.0", features = ["signed"] }
 tower-sessions-sqlx-store = { version = "0.15.0", features = ["postgres"] }
 tracing = { workspace = true }

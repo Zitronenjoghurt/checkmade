@@ -2,6 +2,7 @@ accept_draw: Accept draw
 accept_draw_info: "You accept the opponent's request and the game ends in a draw."
 add_friend: Add Friend
 agreement: Agreement
+analysis: Analysis
 arena: Arena
 attempting_reconnect: Attempting reconnect
 back_to_present: Back to present
@@ -24,6 +25,7 @@ daily_mode: Daily mode
 days: Days
 decline_draw: Decline draw
 decline_draw_info: "You decline the opponent's request and the game continues."
+depth: Depth
 disconnected: Disconnected
 display_legal_targets: Highlight legal moves
 draw_by_x: 'Draw by %{x}'
@@ -76,6 +78,7 @@ resign: Resign
 resign_info: You resign and your opponent wins.
 resignation: Resignation
 sandbox: Sandbox
+score: Score
 second_short: Sec
 server_time: Server Time
 session_request_created: Session request created
@@ -84,6 +87,7 @@ session_request_received: Session request received
 settings: Settings
 seventy_five_move_rule: 75-move rule
 stalemate: Stalemate
+thinking: Thinking
 threefold_repetition: Threefold repetition
 time: Time
 time_control: Time control

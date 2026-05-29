@@ -1,11 +1,12 @@
 use crate::config::Config;
 use crate::layers::metrics::metrics_middleware;
 use axum::routing::get;
-use axum::{middleware, Router};
+use axum::{http, middleware, Router};
 use metrics_exporter_prometheus::PrometheusBuilder;
 use std::net::SocketAddr;
 use std::time::{SystemTime, UNIX_EPOCH};
 use tower_http::services::ServeDir;
+use tower_http::set_header::SetResponseHeaderLayer;
 use tracing::info;
 use tracing_subscriber::EnvFilter;
 
@@ -47,6 +48,14 @@ async fn main() {
         .fallback_service(ServeDir::new(static_dir))
         .layer(session_layer)
         .layer(middleware::from_fn(metrics_middleware))
+        .layer(SetResponseHeaderLayer::overriding(
+            http::header::HeaderName::from_static("cross-origin-opener-policy"),
+            http::header::HeaderValue::from_static("same-origin"),
+        ))
+        .layer(SetResponseHeaderLayer::overriding(
+            http::header::HeaderName::from_static("cross-origin-embedder-policy"),
+            http::header::HeaderValue::from_static("require-corp"),
+        ))
         .with_state(state);
     let metrics_router = Router::new().route(
         "/metrics",

@@ -7,7 +7,7 @@ use checkmade_core::game::play_move::PlayMove;
 use checkmade_core::game::visuals::BoardVisuals;
 use checkmade_core::giga_chess::prelude::action::SessionAction;
 use checkmade_core::giga_chess::prelude::state::GameState;
-use checkmade_core::giga_chess::prelude::{Color, GameOutcome, Piece, Square};
+use checkmade_core::giga_chess::prelude::{Color, Game, GameOutcome, Piece, Square};
 use checkmade_core::messages::client::ClientMessage;
 use checkmade_core::types::session_id::SessionId;
 use checkmade_core::types::user_id::UserId;
@@ -47,6 +47,16 @@ impl ArenaState {
             store,
             self.move_history.current_index(),
         )
+    }
+
+    pub fn current_game(&self, store: &Store) -> Option<Game> {
+        match &self.source {
+            ArenaSource::Sandbox(state) => match self.move_history.current_index() {
+                Some(idx) => Some(state.game_at_index(idx)),
+                None => Some(state.game.clone()),
+            },
+            ArenaSource::Active(id) => store.sessions.get_entry(id).map(|s| s.game().clone()),
+        }
     }
 
     pub fn handle_move(&mut self, from: Square, to: Square, promotion: Option<Piece>, ws: &mut Ws) {
@@ -138,6 +148,10 @@ impl ArenaState {
     pub fn legal_targets(&self, sq: Square, store: &Store) -> Vec<Square> {
         self.source
             .legal_targets(sq, store, self.move_history.current_index())
+    }
+
+    pub fn is_sandbox(&self) -> bool {
+        matches!(self.source, ArenaSource::Sandbox(_))
     }
 }
 

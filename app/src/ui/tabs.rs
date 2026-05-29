@@ -3,6 +3,7 @@ use checkmade_core::lingo::Lingo::*;
 use egui::{Ui, WidgetText};
 use strum::EnumIter;
 
+mod analysis;
 mod arena;
 mod changelog;
 mod friends;
@@ -28,6 +29,7 @@ impl<'a> egui_dock::TabViewer for TabViewer<'a> {
 
     fn ui(&mut self, ui: &mut Ui, tab: &mut Self::Tab) {
         match tab {
+            Tab::Analysis => analysis::show(self, ui),
             Tab::Arena => arena::show(self, ui),
             Tab::Changelog => changelog::show(self, ui),
             Tab::Friends => friends::show(self, ui),
@@ -47,6 +49,7 @@ impl<'a> egui_dock::TabViewer for TabViewer<'a> {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize, EnumIter)]
 pub enum Tab {
+    Analysis,
     Arena,
     Changelog,
     Friends,
@@ -57,6 +60,7 @@ pub enum Tab {
 impl Tab {
     pub fn title(&self) -> String {
         match self {
+            Tab::Analysis => Analysis.t().to_string(),
             Tab::Arena => Arena.t().to_string(),
             Tab::Changelog => Changelog.t().to_string(),
             Tab::Friends => Friends.t().to_string(),

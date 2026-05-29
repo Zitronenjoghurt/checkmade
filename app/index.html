@@ -4,11 +4,32 @@
     <meta charset="utf-8"/>
     <meta content="width=device-width, initial-scale=1.0, user-scalable=no" name="viewport"/>
     <title>Checkmade</title>
+    <meta content="website" property="og:type"/>
+    <meta content="Checkmade" property="og:title"/>
+    <meta content="A sleek, multiplayer chess experience." property="og:description"/>
+    <meta content="https://chess.lemon.industries" property="og:url"/>
+    <meta content="summary_large_image" name="twitter:card"/>
+    <meta content="Checkmade" name="twitter:title"/>
+    <meta content="A sleek, multiplayer chess experience." name="twitter:description"/>
 
     <link data-trunk data-wasm-opt="2" rel="rust"/>
     <base data-trunk-public-url/>
 
     <link data-trunk href="public/style.css" rel="css"/>
+    <link data-trunk href="public/stockfish" rel="copy-dir"/>
+    <link data-trunk href="public/favicon.ico" rel="copy-file"/>
+    <link data-trunk href="public/favicon.svg" rel="copy-file"/>
+    <link data-trunk href="public/favicon-32x32.png" rel="copy-file"/>
+    <link data-trunk href="public/apple-touch-icon.png" rel="copy-file"/>
+    <link data-trunk href="public/android-chrome-192x192.png" rel="copy-file"/>
+    <link data-trunk href="public/android-chrome-512x512.png" rel="copy-file"/>
+    <link data-trunk href="public/manifest.json" rel="copy-file"/>
+
+    <link href="/favicon.ico" rel="icon" sizes="any"/>
+    <link href="/favicon.svg" rel="icon" type="image/svg+xml"/>
+    <link href="/favicon-32x32.png" rel="icon" sizes="32x32" type="image/png"/>
+    <link href="/apple-touch-icon.png" rel="apple-touch-icon"/>
+    <link href="/manifest.json" rel="manifest"/>
 
     <meta content="#1e1e1e" media="(prefers-color-scheme: dark)" name="theme-color">
     <meta content="#f5f5f5" media="(prefers-color-scheme: light)" name="theme-color">

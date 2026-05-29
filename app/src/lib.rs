@@ -3,6 +3,7 @@ extern crate rust_i18n;
 i18n!("locales");
 
 mod app;
+mod engine;
 mod event;
 mod http;
 mod i18n;

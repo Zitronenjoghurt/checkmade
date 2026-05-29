@@ -11,9 +11,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Added
 
+- Board analysis in sandbox mode
 - Time travel! >:)
     - In sandbox mode you can now explore alternative outcomes of your game by looking at an older position and taking a
       different move
+- An easy way to create new sandbox games
+- Website icon
+    - It's a little bishop but the head is a lemon!
 
 ## Fixed
 

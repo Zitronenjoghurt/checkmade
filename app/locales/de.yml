@@ -2,6 +2,7 @@ accept_draw: Unentschieden Akzeptieren
 accept_draw_info: Du akzeptierst die Anfrage des Gegners und dieses Spiel endet im Unentschieden.
 add_friend: Freund hinzufügen
 agreement: Übereinstimmung
+analysis: Analyse
 arena: Arena
 attempting_reconnect: Verbindung wird wiederhergestellt
 back_to_present: Zur Gegenwart
@@ -24,6 +25,7 @@ daily_mode: Täglicher Modus
 days: Tage
 decline_draw: Unentschieden Ablehnen
 decline_draw_info: Du lehnst die Anfrage des Gegners ab und das Spiel wird fortgesetzt.
+depth: Tiefe
 disconnected: Verbindung getrennt
 display_legal_targets: Markiere gültige Züge
 draw_by_x: 'Unentschieden durch %{x}'
@@ -76,6 +78,7 @@ resign: Aufgeben
 resign_info: Du gibst das Spiel auf und dein Gegner gewinnt.
 resignation: Resignation
 sandbox: Sandkasten
+score: Punkte
 second_short: Sek
 server_time: Serverzeit
 session_request_created: Sitzungsanfrage erstellt
@@ -84,6 +87,7 @@ session_request_received: Sitzungsanfrage erhalten
 settings: Einstellungen
 seventy_five_move_rule: 75-Zug-Regel
 stalemate: Patt
+thinking: Denkt
 threefold_repetition: Dreifachwiederholung
 time: Zeit
 time_control: Bedenkzeit

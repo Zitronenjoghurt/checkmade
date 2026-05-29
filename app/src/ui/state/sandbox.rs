@@ -12,6 +12,17 @@ pub struct SandboxState {
 }
 
 impl SandboxState {
+    pub fn new_start_pos() -> Self {
+        Self {
+            game: Game::default(),
+            black_id: None,
+            white_id: None,
+            perspective: Color::White,
+            san_history: Vec::new(),
+            previous_lines: Vec::new(),
+        }
+    }
+
     pub fn game_at_index(&self, move_index: usize) -> Game {
         let moves = &self.game.history()[..move_index];
         Game::from_moves(moves).unwrap_or_default()

@@ -3,6 +3,7 @@ use crate::store::Store;
 use crate::tl;
 use crate::ui::icons;
 use crate::ui::modal::Modal;
+use crate::ui::state::analysis::AnalysisState;
 use crate::ui::state::arena::{ArenaActions, ArenaSource, ArenaState};
 use crate::ui::widgets::arena::move_list::{MoveListEvent, MoveListWidget};
 use crate::ui::widgets::arena::user::ArenaUser;
@@ -19,6 +20,7 @@ mod move_list;
 mod user;
 
 pub struct ArenaWidget<'a> {
+    analysis: &'a mut AnalysisState,
     images: &'a mut Images,
     server_time: &'a crate::server_time::ServerTime,
     settings: &'a crate::ui::state::settings::Settings,
@@ -29,6 +31,7 @@ pub struct ArenaWidget<'a> {
 
 impl<'a> ArenaWidget<'a> {
     pub fn new(
+        analysis: &'a mut AnalysisState,
         images: &'a mut Images,
         server_time: &'a crate::server_time::ServerTime,
         settings: &'a crate::ui::state::settings::Settings,
@@ -37,6 +40,7 @@ impl<'a> ArenaWidget<'a> {
         ws: &'a mut Ws,
     ) -> Self {
         Self {
+            analysis,
             images,
             server_time,
             settings,
@@ -202,7 +206,26 @@ impl egui::Widget for ArenaWidget<'_> {
         let Some(visuals) = self.state.visuals(me_id, self.store) else {
             return ui.spinner();
         };
-        let board_visuals = visuals.board;
+
+        let mut board_visuals = visuals.board;
+        if self.state.is_sandbox()
+            && let Some(game) = self.state.current_game(self.store)
+            && !game.is_over()
+        {
+            let moves = game.history();
+            let current_ply = self
+                .state
+                .move_history
+                .current_index()
+                .unwrap_or((moves.len() as isize).max(0) as usize);
+            self.analysis.sync_game(moves, current_ply, ui.ctx());
+            if let Some(eval) = &self.analysis.eval
+                && let Some((from, to)) = eval.best_move
+            {
+                board_visuals.best_move_from = Some(from);
+                board_visuals.best_move_to = Some(to);
+            }
+        }
 
         let (promo_modal, chosen_piece) = Self::promotion_modal(ui);
         Self::confirm_modal(ui, self.state, self.store, self.ws);

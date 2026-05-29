@@ -2,6 +2,7 @@ use crate::ui::widgets::friends::FriendsTab;
 use crate::ui::widgets::games::GamesTab;
 use checkmade_core::types::session_request::CreateSessionRequest;
 
+pub mod analysis;
 pub mod arena;
 mod move_history;
 pub mod sandbox;
@@ -9,6 +10,8 @@ pub mod settings;
 
 #[derive(Default, serde::Serialize, serde::Deserialize)]
 pub struct UiState {
+    #[serde(skip, default)]
+    pub analysis: analysis::AnalysisState,
     pub arena: arena::ArenaState,
     pub friends_tab: FriendsTab,
     pub games_tab: GamesTab,
@@ -19,5 +22,6 @@ pub struct UiState {
 impl UiState {
     pub fn update(&mut self, ctx: &egui::Context) {
         self.settings.apply(ctx);
+        self.analysis.update(ctx);
     }
 }

@@ -1,7 +1,7 @@
 use crate::game::coords::BoardCoords;
 use giga_chess::prelude::{ChessBoard, Color, Game, Piece, Square};
 
-#[derive(Debug, Default, Clone, Eq, PartialEq)]
+#[derive(Debug, Default, Clone)]
 #[cfg_attr(feature = "bitcode", derive(bitcode::Encode, bitcode::Decode))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct BoardVisuals {
@@ -11,6 +11,8 @@ pub struct BoardVisuals {
     pub pieces: Vec<PieceVisuals>,
     pub threat_targets: Vec<Square>,
     pub threat_sources: Vec<Square>,
+    pub best_move_from: Option<Square>,
+    pub best_move_to: Option<Square>,
 }
 
 impl BoardVisuals {
@@ -45,6 +47,8 @@ impl BoardVisuals {
             pieces: PieceVisuals::from_board(&game.position().board),
             threat_targets,
             threat_sources,
+            best_move_from: None,
+            best_move_to: None,
         }
     }
 

@@ -9,6 +9,7 @@ pub fn show(v: &mut TabViewer, ui: &mut egui::Ui) {
         .show(ui, |ui| {
             ui.set_max_height(max_height - 24.0);
             ArenaWidget::new(
+                &mut v.state.analysis,
                 v.images,
                 v.server_time,
                 &v.state.settings,

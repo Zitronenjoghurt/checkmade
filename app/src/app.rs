@@ -1,3 +1,4 @@
+use crate::engine::{Engine, StockFish};
 use crate::event::*;
 use crate::http::Http;
 use crate::i18n::Translatable;
@@ -5,6 +6,7 @@ use crate::server_time::ServerTime;
 use crate::store::Store;
 use crate::ui::icons;
 use crate::ui::state::arena::ArenaSource;
+use crate::ui::state::sandbox::SandboxState;
 use crate::ui::state::UiState;
 use crate::ui::tabs::{Tab, TabViewer};
 use crate::ui::widgets::connection_status::ConnectionStatus;
@@ -30,6 +32,8 @@ pub struct Checkmade {
     dock: DockState<Tab>,
     ui: UiState,
     #[serde(skip, default)]
+    sf: StockFish,
+    #[serde(skip, default)]
     images: Images,
     #[serde(skip, default)]
     markdown: Markdown,
@@ -50,6 +54,7 @@ impl Default for Checkmade {
         Self {
             dock: DockState::new(vec![]),
             ui: UiState::default(),
+            sf: StockFish::default(),
             images: Images::default(),
             markdown: Markdown::default(),
             server_time: ServerTime::default(),
@@ -94,6 +99,7 @@ impl eframe::App for Checkmade {
         }
         self.toasts.show(ui.ctx());
         self.render(ui);
+        self.sf.update(ui.ctx());
         ui.ctx().request_repaint();
     }
 
@@ -364,6 +370,22 @@ impl Checkmade {
                     .clicked()
                 {
                     self.open_tab(Tab::Arena);
+                }
+
+                if ui
+                    .button(icons::HEAD_CIRCUIT)
+                    .on_hover_text(Sandbox.t())
+                    .clicked()
+                {
+                    OpenSandboxEvent(SandboxState::new_start_pos()).send(ui.ctx());
+                }
+
+                if ui
+                    .button(icons::BRAIN)
+                    .on_hover_text(Analysis.t())
+                    .clicked()
+                {
+                    self.open_tab(Tab::Analysis);
                 }
 
                 ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {

@@ -1005,6 +1005,7 @@ dependencies = [
  "egui-phosphor",
  "egui_commonmark",
  "egui_dock",
+ "egui_plot",
  "ehttp",
  "ewebsock",
  "heck 0.5.0",
@@ -1798,6 +1799,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "egui_plot"
+version = "0.35.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d7bd66213736bf9a9a53dc4888570b9194fc0db906507517a7fcc787e888ac47"
+dependencies = [
+ "ahash 0.8.12",
+ "egui",
+ "emath",
+]
+
+[[package]]
 name = "ehttp"
 version = "0.7.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2354,7 +2366,7 @@ dependencies = [
 [[package]]
 name = "giga-chess"
 version = "0.10.0"
-source = "git+https://github.com/Zitronenjoghurt/giga-chess?rev=a3ba269e3710653c347f6dca7303d06435f2635e#a3ba269e3710653c347f6dca7303d06435f2635e"
+source = "git+https://github.com/Zitronenjoghurt/giga-chess?rev=2bd00b5feabb622c1a9ec3138312c1c859121c99#2bd00b5feabb622c1a9ec3138312c1c859121c99"
 dependencies = [
  "bitcode",
  "serde",

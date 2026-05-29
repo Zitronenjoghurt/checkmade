@@ -2,6 +2,7 @@ accept_draw: x
 accept_draw_info: x
 add_friend: x
 agreement: x
+analysis: x
 arena: x
 attempting_reconnect: x
 back_to_present: x
@@ -24,6 +25,7 @@ daily_mode: x
 days: x
 decline_draw: x
 decline_draw_info: x
+depth: x
 disconnected: x
 display_legal_targets: x
 draw_by_x: x
@@ -76,6 +78,7 @@ resign: x
 resign_info: x
 resignation: x
 sandbox: x
+score: x
 second_short: x
 server_time: x
 session_request_created: x
@@ -84,6 +87,7 @@ session_request_received: x
 settings: x
 seventy_five_move_rule: x
 stalemate: x
+thinking: x
 threefold_repetition: x
 time: x
 time_control: x

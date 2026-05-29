@@ -1,3 +1,4 @@
+pub mod analysis;
 pub mod arena;
 pub mod board;
 pub mod connection_status;

@@ -1,4 +1,6 @@
 use crate::ui::state::sandbox::SandboxState;
+use checkmade_core::giga_chess::stockfish::command::SfCommand;
+use checkmade_core::giga_chess::stockfish::event::SfEvent;
 use checkmade_core::types::session_id::SessionId;
 use std::any::TypeId;
 use std::collections::HashSet;
@@ -122,3 +124,11 @@ impl AppEvent for OpenSessionEvent {}
 #[derive(Clone)]
 pub struct OpenSandboxEvent(pub SandboxState);
 impl AppEvent for OpenSandboxEvent {}
+
+#[derive(Clone)]
+pub struct SfCommandEvent(pub SfCommand);
+impl AppEvent for SfCommandEvent {}
+
+#[derive(Clone)]
+pub struct SfResponseEvent(pub SfEvent);
+impl AppEvent for SfResponseEvent {}

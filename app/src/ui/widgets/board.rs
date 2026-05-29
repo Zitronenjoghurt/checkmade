@@ -29,6 +29,7 @@ pub struct BoardWidget<'a> {
     highlight_color: Color32,
     threat_target_color: Color32,
     threat_source_color: Color32,
+    best_move_color: Color32,
     legal_targets_fn: Option<Box<dyn FnMut(Square) -> Vec<Square> + 'a>>,
 }
 
@@ -46,6 +47,7 @@ impl<'a> BoardWidget<'a> {
             highlight_color: Color32::from_rgba_premultiplied(145, 130, 50, 75),
             threat_target_color: Color32::from_rgba_premultiplied(210, 45, 35, 200),
             threat_source_color: Color32::from_rgba_premultiplied(200, 50, 40, 140),
+            best_move_color: Color32::from_rgba_premultiplied(50, 100, 200, 90),
             legal_targets_fn: None,
         }
     }
@@ -87,6 +89,11 @@ impl<'a> BoardWidget<'a> {
 
     pub fn threat_source_color(mut self, color: Color32) -> Self {
         self.threat_source_color = color;
+        self
+    }
+
+    pub fn best_move_color(mut self, color: Color32) -> Self {
+        self.best_move_color = color;
         self
     }
 
@@ -496,6 +503,14 @@ impl<'a> egui::Widget for BoardWidget<'a> {
                 && !self.vis.threat_targets.contains(&to)
             {
                 self.paint_highlight(&painter, &rect, to, self.highlight_color);
+            }
+
+            if let Some(from) = self.vis.best_move_from {
+                self.paint_highlight(&painter, &rect, from, self.best_move_color);
+            }
+
+            if let Some(to) = self.vis.best_move_to {
+                self.paint_highlight(&painter, &rect, to, self.best_move_color);
             }
 
             for sq in &self.vis.threat_sources {
